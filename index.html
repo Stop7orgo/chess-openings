@@ -6,7 +6,7 @@
     <title>مستعرض افتتاحيات Lichess العالمي</title>
     <style>
         :root {
-            --bg-color: #161512; /* ألوان Lichess الداكنة */
+            --bg-color: #161512;
             --card-bg: #262421;
             --primary-color: #629924;
             --accent-color: #bababa;
@@ -14,29 +14,23 @@
         }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; }
         .container { max-width: 1000px; margin: auto; }
-        
         .header-box { text-align: center; margin-bottom: 30px; }
         .controls { background: var(--card-bg); padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); position: sticky; top: 10px; z-index: 100; }
-        
         .search-group { display: flex; gap: 10px; flex-wrap: wrap; }
         input { flex: 1; padding: 12px; border-radius: 4px; border: 1px solid #403d39; background: #1a1917; color: white; font-size: 16px; }
-        
         button { padding: 10px 20px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-mode { background-color: #363432; color: white; border: 1px solid #403d39; }
         .btn-mode.active { background-color: var(--primary-color); border-color: var(--primary-color); }
-        
-        /* شبكة النتائج */
         .openings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-top: 20px; }
-        .card { background: var(--card-bg); padding: 15px; border-radius: 5px; border-bottom: 3px solid transparent; transition: 0.3s; }
+        .card { background: var(--card-bg); padding: 15px; border-radius: 5px; border-bottom: 3px solid transparent; transition: 0.3s; position: relative; }
         .card:hover { border-bottom: 3px solid var(--primary-color); background: #2d2b28; }
         .card h3 { margin: 0 0 10px 0; font-size: 1rem; color: #fff; }
-        .card .move-text { display: block; background: #1a1917; padding: 8px; border-radius: 4px; font-family: 'Courier New', Courier, monospace; color: #99c766; margin-top: 10px; font-size: 0.9rem; }
+        .card .move-text { display: block; background: #1a1917; padding: 8px; border-radius: 4px; font-family: monospace; color: #99c766; margin-top: 10px; font-size: 0.9rem; word-break: break-all; }
         .card .eco { font-size: 0.75rem; color: #999; text-transform: uppercase; border: 1px solid #444; padding: 2px 5px; border-radius: 3px; }
-
+        .btn-copy { background: #444; color: white; font-size: 12px; width: 100%; margin-top: 10px; padding: 8px; }
+        .btn-copy:hover { background: #555; }
         .loading-text { text-align: center; color: var(--primary-color); padding: 20px; font-weight: bold; }
-        .load-more-container { text-align: center; margin-top: 30px; }
-        .btn-load { background: var(--primary-color); color: white; padding: 12px 50px; border-radius: 4px; display: none; }
-        .hidden { display: none; }
+        .btn-load { background: var(--primary-color); color: white; padding: 12px 50px; border-radius: 4px; display: none; margin: 30px auto; }
     </style>
 </head>
 <body>
@@ -44,7 +38,7 @@
 <div class="container">
     <div class="header-box">
         <h1>🔍 مستعرض افتتاحيات Lichess</h1>
-        <p id="loadingStatus" class="loading-text">جاري تحميل قاعدة البيانات العالمية (3000+ افتتاح)...</p>
+        <p id="loadingStatus" class="loading-text">جاري جلب البيانات مباشرة من مستودع Lichess...</p>
     </div>
 
     <div class="controls">
@@ -55,8 +49,7 @@
     </div>
 
     <div id="openingsGrid" class="openings-grid"></div>
-
-    <div class="load-more-container">
+    <div style="text-align: center;">
         <button id="loadMoreBtn" class="btn-load" onclick="loadMore()">تحميل المزيد</button>
     </div>
 </div>
@@ -67,42 +60,100 @@
     let currentMode = 'name'; 
     let visibleCount = 20;
 
-    // جلب البيانات من مستودع Lichess الرسمي على GitHub
+    // جلب البيانات مباشرة بدون وسيط (Proxy) لضمان السرعة والأمان
+    async function fetchOpenings() {
+        const loadingStatus = document.getElementById('loadingStatus');
+        const url = 'https://raw.githubusercontent.com/lichess-org/chess-openings/master/dist/openings.json';
+        
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('فشل في الاتصال بمستودع البيانات');
+            
+            const data = await response.json();
+            
+            allOpenings = data.map(item => ({
+                name: item.name,
+                eco: item.eco,
+                moves: item.pgn
+            })).sort((a, b) => a.name.localeCompare(b.name));
 
-// استبدل دالة fetchOpenings القديمة بهذا الجزء المطور
-async function fetchOpenings() {
-    const loadingStatus = document.getElementById('loadingStatus');
-    
-    // استخدام وسيط AllOrigins لتجاوز قيود CORS
-    const targetUrl = 'https://raw.githubusercontent.com/lichess-org/chess-openings/master/dist/openings.json';
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-    
-    try {
-        const response = await fetch(proxyUrl);
-        if (!response.ok) throw new Error('Network error');
-        
-        const dataWrapper = await response.json();
-        // الوسيط يعيد البيانات داخل حقل اسمه contents كـ string، لذا نحتاج لتحويله لـ JSON
-        const data = JSON.parse(dataWrapper.contents);
-        
-        allOpenings = data.map(item => ({
-            name: item.name,
-            eco: item.eco,
-            moves: item.pgn
-        })).sort((a, b) => a.name.localeCompare(b.name));
-
-        loadingStatus.innerText = `تم تحميل ${allOpenings.length} افتتاحية بنجاح!`;
-        setTimeout(() => loadingStatus.classList.add('hidden'), 2000);
-        
-        filteredList = [...allOpenings];
-        renderOpenings();
-    } catch (error) {
-        console.error("Error details:", error);
-        loadingStatus.innerHTML = "<span style='color:red;'>فشل التحميل عبر الوسيط. جرب الحل الثاني بالأسفل.</span>";
+            loadingStatus.innerText = `✅ تم تحميل ${allOpenings.length} افتتاحية بنجاح!`;
+            setTimeout(() => loadingStatus.style.display = 'none', 3000);
+            
+            filteredList = [...allOpenings];
+            renderOpenings();
+        } catch (error) {
+            console.error("Error:", error);
+            loadingStatus.innerHTML = `<span style="color:red;">خطأ: ${error.message}. تأكد من تحديث الصفحة.</span>`;
+        }
     }
-}
-  
+
     function toggleMode() {
+        const btn = document.getElementById('modeBtn');
+        const input = document.getElementById('searchInput');
+        currentMode = (currentMode === 'name') ? 'moves' : 'name';
+        
+        btn.innerText = (currentMode === 'name') ? "وضع البحث: الاسم" : "وضع البحث: النقلة";
+        btn.classList.toggle('active');
+        input.placeholder = (currentMode === 'name') ? "ابحث بالاسم (مثل: Sicilian)" : "ابحث بالنقلة (مثل: 1. e4)";
+        handleSearch();
+    }
+
+    function handleSearch() {
+        const query = document.getElementById('searchInput').value.toLowerCase().trim();
+        filteredList = allOpenings.filter(op => {
+            if (currentMode === 'name') {
+                return op.name.toLowerCase().startsWith(query);
+            } else {
+                return op.moves.toLowerCase().startsWith(query);
+            }
+        });
+        visibleCount = 20;
+        renderOpenings();
+    }
+
+    function copyMoves(btn, text) {
+        navigator.clipboard.writeText(text).then(() => {
+            const originalText = btn.innerText;
+            btn.innerText = "تم النسخ! ✓";
+            btn.style.background = "#27ae60";
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.background = "#444";
+            }, 1500);
+        });
+    }
+
+    function renderOpenings() {
+        const grid = document.getElementById('openingsGrid');
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        grid.innerHTML = "";
+
+        const itemsToShow = filteredList.slice(0, visibleCount);
+        itemsToShow.forEach(op => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <span class="eco">${op.eco}</span>
+                <h3>${op.name}</h3>
+                <span class="move-text">${op.moves}</span>
+                <button class="btn-copy" onclick="copyMoves(this, '${op.moves}')">نسخ النقلات 📋</button>
+            `;
+            grid.appendChild(card);
+        });
+
+        loadMoreBtn.style.display = (filteredList.length > visibleCount) ? "block" : "none";
+    }
+
+    function loadMore() {
+        visibleCount += 20;
+        renderOpenings();
+    }
+
+    fetchOpenings();
+</script>
+</body>
+</html>    function toggleMode() {
         const btn = document.getElementById('modeBtn');
         const input = document.getElementById('searchInput');
         
