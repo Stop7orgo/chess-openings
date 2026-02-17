@@ -2,82 +2,95 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Lichess Explorer Connector</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المكتبة العالمية للافتتاحيات</title>
     <style>
-        :root { --bg: #161512; --card: #262421; --primary: #629924; --text: #fff; }
-        body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
-        .container { max-width: 800px; margin: auto; text-align: center; }
-        .search-box { background: var(--card); padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        input { width: 80%; padding: 15px; border-radius: 8px; border: 2px solid #444; background: #1a1917; color: white; font-size: 18px; margin-bottom: 20px; }
-        #result { margin-top: 20px; text-align: left; background: #1a1917; padding: 20px; border-radius: 8px; min-height: 100px; display: none; border-right: 5px solid var(--primary); }
-        .opening-title { color: var(--primary); font-size: 1.4rem; margin-bottom: 10px; }
-        .stats { color: #aaa; font-size: 0.9rem; margin-top: 10px; }
-        .badge { background: #333; padding: 3px 8px; border-radius: 4px; margin-right: 5px; }
-        .loading { color: var(--primary); display: none; }
+        :root { --bg: #121212; --card: #1e1e1e; --primary: #00b4d8; --text: #e0e0e0; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+        .container { max-width: 900px; margin: auto; }
+        .search-area { background: var(--card); padding: 25px; border-radius: 12px; position: sticky; top: 10px; z-index: 100; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+        input { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid #333; background: #0a0a0a; color: white; box-sizing: border-box; font-size: 1.1rem; }
+        .stats-bar { margin-top: 10px; font-size: 0.9rem; color: var(--primary); font-weight: bold; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; margin-top: 25px; }
+        .card { background: var(--card); border-radius: 10px; padding: 15px; border-bottom: 4px solid #333; transition: 0.3s; position: relative; overflow: hidden; }
+        .card:hover { border-color: var(--primary); transform: translateY(-5px); }
+        .card h3 { margin: 0 0 10px; font-size: 1rem; line-height: 1.4; color: #fff; }
+        .moves { background: #000; padding: 10px; border-radius: 5px; color: #00f5d4; font-family: 'Courier New', monospace; font-size: 0.9rem; display: block; margin-top: 10px; }
+        .eco-tag { position: absolute; top: 10px; left: 10px; background: #333; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; }
+        .btn-copy { margin-top: 15px; width: 100%; padding: 8px; background: #2a2a2a; border: none; color: white; cursor: pointer; border-radius: 5px; }
+        .btn-copy:hover { background: #3d3d3d; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🌐 الربط المباشر بمكتبة Lichess</h1>
-    <p>اكتب نقلات الافتتاح (مثلاً: e4 e5 Nf3) لجلب البيانات فوراً من السيرفر العالمي</p>
-    
-    <div class="search-box">
-        <input type="text" id="movesInput" placeholder="ادخل النقلات بصيغة UCI (e2e4, e7e5...)" oninput="fetchFromLichess()">
-        <div id="loader" class="loading">جاري الاستعلام من قاعدة البيانات العالمية...</div>
-        
-        <div id="result">
-            <div id="openingName" class="opening-title"></div>
-            <div id="openingMoves" style="font-family: monospace; color: #99c766;"></div>
-            <div id="openingStats" class="stats"></div>
-        </div>
+    <div class="search-area">
+        <h1>🔍 المكتبة العالمية للافتتاحيات</h1>
+        <input type="text" id="searchInput" placeholder="ابحث عن افتتاحية (مثلاً: Sicilian أو d4 d5)..." oninput="handleSearch()">
+        <div id="status" class="stats-bar">جاري الاتصال بالمكتبة العالمية...</div>
     </div>
+
+    <div id="grid" class="grid"></div>
 </div>
 
 <script>
-    let timeout = null;
+    let db = [];
+    let filtered = [];
 
-    async function fetchFromLichess() {
-        const moves = document.getElementById('movesInput').value.trim();
-        const resultDiv = document.getElementById('result');
-        const loader = document.getElementById('loader');
-
-        if (moves.length < 2) {
-            resultDiv.style.display = 'none';
-            return;
-        }
-
-        // انتظر قليلاً بعد التوقف عن الكتابة (Debouncing)
-        clearTimeout(timeout);
-        timeout = setTimeout(async () => {
-            loader.style.display = 'block';
+    // الربط بمكتبة عالمية مفتوحة المصدر عبر CDN (تجاوز CORS)
+    async function initDB() {
+        const status = document.getElementById('status');
+        try {
+            // استخدام رابط CDN لملف JSON عالمي يحتوي على آلاف الافتتاحيات
+            const url = 'https://cdn.jsdelivr.net/gh/niklasf/chess-openings@master/dist/openings.json';
+            const response = await fetch(url);
+            db = await response.json();
             
-            try {
-                // الربط مع Lichess Opening Explorer API
-                // سنستخدم Master Database (قاعدة بيانات الأساتذة)
-                const url = `https://explorer.lichess.ovh/master?play=${moves.replace(/\s+/g, ',')}`;
-                
-                const response = await fetch(url);
-                const data = await response.json();
-
-                if (data.opening) {
-                    resultDiv.style.display = 'block';
-                    document.getElementById('openingName').innerHTML = `<span class="badge">ECO: ${data.opening.eco}</span> ${data.opening.name}`;
-                    document.getElementById('openingMoves').innerText = `النقلات المسجلة: ${moves}`;
-                    
-                    // جلب إحصائيات من أفضل النقلات التالية في المكتبة
-                    let nextMoves = data.moves.slice(0, 3).map(m => `${m.san} (${m.white} فوز للأبيض)`).join(' | ');
-                    document.getElementById('openingStats').innerText = `أقوى النقلات التالية الممكنة: ${nextMoves}`;
-                } else {
-                    document.getElementById('openingName').innerText = "افتتاح غير معروف أو نقلات غير دقيقة";
-                }
-            } catch (error) {
-                console.error("API Error:", error);
-            } finally {
-                loader.style.display = 'none';
-            }
-        }, 500); // استعلم بعد نصف ثانية من توقف المستخدم عن الكتابة
+            status.innerText = `✅ متصل بنجاح: تم جلب ${db.length} افتتاحية من القاعدة العالمية.`;
+            filtered = db.slice(0, 50); // عرض أول 50 فقط للسرعة
+            render();
+        } catch (e) {
+            status.innerText = "❌ فشل الربط بالمكتبة. جرب تحديث الصفحة.";
+            console.error(e);
+        }
     }
+
+    function handleSearch() {
+        const query = document.getElementById('searchInput').value.toLowerCase().trim();
+        if (query === "") {
+            filtered = db.slice(0, 50);
+        } else {
+            // بحث ذكي في الأسماء والنقلات معاً
+            filtered = db.filter(item => 
+                item.name.toLowerCase().includes(query) || 
+                item.pgn.toLowerCase().includes(query)
+            ).slice(0, 50);
+        }
+        render();
+    }
+
+    function render() {
+        const grid = document.getElementById('grid');
+        grid.innerHTML = filtered.map(item => `
+            <div class="card">
+                <span class="eco-tag">${item.eco}</span>
+                <div style="margin-top: 15px;">
+                    <h3>${item.name}</h3>
+                    <code class="moves">${item.pgn}</code>
+                    <button class="btn-copy" onclick="copyMoves('${item.pgn}', this)">نسخ النقلات</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function copyMoves(text, btn) {
+        navigator.clipboard.writeText(text);
+        const originalText = btn.innerText;
+        btn.innerText = "تم النسخ! ✓";
+        setTimeout(() => btn.innerText = originalText, 1000);
+    }
+
+    initDB();
 </script>
 
 </body>
