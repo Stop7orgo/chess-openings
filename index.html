@@ -1046,47 +1046,165 @@
             return null;
         }
         
-        // استخدام eco.json (قاعدة بيانات شاملة)
-        let ecoDatabase = null; // cache للبيانات
-        
-        async function loadECODatabase() {
-            if (ecoDatabase) return ecoDatabase;
+        // استخدام Lichess Cloud API (الطريقة المثلى - مثل app-old.js)
+        async function detectOpeningFromLichessCloud(moves) {
+            if (!moves || moves.length < 1) return null;
             
             try {
-                console.log('📚 Loading ECO database...');
-                const response = await fetch('https://cdn.jsdelivr.net/npm/@chess-openings/eco.json@1.0.0/eco.json');
+                console.log('🔍 Using Lichess Cloud API for opening detection...');
                 
-                if (response.ok) {
-                    ecoDatabase = await response.json();
-                    console.log(`✅ ECO database loaded: ${ecoDatabase.length} openings`);
-                    return ecoDatabase;
+                const tempChess = new Chess();
+                let lastValidOpening = null;
+                let bookMoveCount = 0;
+                
+                // جرب حتى 20 نقلة أو حتى نخرج من نطاق الافتتاحية
+                for (let i = 0; i < Math.min(moves.length, 20); i++) {
+                    try {
+                        tempChess.move(moves[i]);
+                    } catch {
+                        break;
+                    }
+                    
+                    const fen = tempChess.fen();
+                    
+                    try {
+                        // Lichess Cloud Eval API
+                        const response = await fetch(
+                            `https://lichess.org/api/cloud-eval?fen=${encodeURIComponent(fen)}&multiPv=1&variant=standard`,
+                            {
+                                method: 'GET',
+                                headers: { 'Accept': 'application/json' }
+                            }
+                        );
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            
+                            // تحقق من وجود PVs (يعني الموقف معروف في قاعدة البيانات)
+                            if (data.pvs && data.pvs.length > 0) {
+                                bookMoveCount = i + 1;
+                                
+                                // جرب الحصول على اسم الافتتاحية من Explorer API
+                                try {
+                                    const explorerResponse = await fetch(
+                                        `https://explorer.lichess.org/lichess?fen=${encodeURIComponent(fen)}&speeds=blitz,rapid,classical&ratings=2000,2200,2500`,
+                                        {
+                                            method: 'GET',
+                                            headers: { 'Accept': 'application/json' }
+                                        }
+                                    );
+                                    
+                                    if (explorerResponse.ok) {
+                                        const explorerData = await explorerResponse.json();
+                                        
+                                        if (explorerData.opening) {
+                                            lastValidOpening = {
+                                                name: explorerData.opening.name,
+                                                eco: explorerData.opening.eco || '',
+                                                length: i + 1,
+                                                source: 'lichess-cloud'
+                                            };
+                                        }
+                                    }
+                                    
+                                    // تأخير صغير لتجنب Rate limiting
+                                    await new Promise(resolve => setTimeout(resolve, 150));
+                                    
+                                } catch (explorerError) {
+                                    console.warn('Explorer API failed at move', i + 1);
+                                }
+                            } else {
+                                // لا توجد PVs = خرجنا من نطاق Book moves
+                                break;
+                            }
+                        } else {
+                            console.warn(`Lichess Cloud returned status: ${response.status}`);
+                            break;
+                        }
+                        
+                        // تأخير بين الطلبات
+                        await new Promise(resolve => setTimeout(resolve, 150));
+                        
+                    } catch (fetchError) {
+                        console.warn('Fetch error at move', i + 1, fetchError);
+                        break;
+                    }
                 }
+                
+                if (lastValidOpening) {
+                    const movesText = moves.slice(0, lastValidOpening.length).map(m => m.san).join(' ');
+                    const result = {
+                        ...lastValidOpening,
+                        moves: movesText,
+                        bookMoveCount: bookMoveCount
+                    };
+                    
+                    console.log('✅ Opening detected from Lichess Cloud:', result.name);
+                    showToast(`✅ ${result.name} (${result.eco}) 🌐`, 3000);
+                    return result;
+                }
+                
+                // إذا لم نجد اسم افتتاحية لكن وجدنا Book moves
+                if (bookMoveCount > 0) {
+                    console.log(`✅ Found ${bookMoveCount} book moves from Lichess Cloud`);
+                    return {
+                        name: 'Opening Theory',
+                        eco: '',
+                        moves: moves.slice(0, bookMoveCount).map(m => m.san).join(' '),
+                        length: bookMoveCount,
+                        bookMoveCount: bookMoveCount,
+                        source: 'lichess-cloud'
+                    };
+                }
+                
+                console.log('❌ No opening found in Lichess Cloud');
+                
             } catch (error) {
-                console.error('❌ Failed to load ECO database:', error);
+                console.error('❌ Lichess Cloud API failed:', error);
             }
             
             return null;
         }
         
-        async function detectOpeningFromECO(moves) {
+        // استخدام GitHub hosted openings (خطة احتياطية)
+        let githubOpeningsCache = null;
+        
+        async function loadGitHubOpenings() {
+            if (githubOpeningsCache) return githubOpeningsCache;
+            
+            try {
+                console.log('📚 Loading openings from GitHub...');
+                const response = await fetch('https://stop7orgo.github.io/chess-openings/openings.json');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    githubOpeningsCache = data;
+                    console.log(`✅ GitHub openings loaded: ${data.length} entries`);
+                    return data;
+                }
+            } catch (error) {
+                console.warn('❌ GitHub openings failed:', error);
+            }
+            
+            return null;
+        }
+        
+        async function detectOpeningFromGitHub(moves) {
             if (!moves || moves.length < 1) return null;
             
             try {
-                // تحميل قاعدة البيانات (مرة واحدة فقط)
-                const eco = await loadECODatabase();
-                if (!eco) return null;
+                const openings = await loadGitHubOpenings();
+                if (!openings) return null;
                 
-                console.log('🔍 Searching ECO database...');
+                console.log('🔍 Searching GitHub openings database...');
                 
-                // بناء FEN بعد تطبيق النقلات تدريجياً
                 const tempChess = new Chess();
                 let bestMatch = null;
                 
-                // جرب أطول تسلسل ممكن (من الأطول للأقصر)
-                for (let i = Math.min(moves.length, 20); i >= 1; i--) {
+                // جرب من الأطول للأقصر
+                for (let i = Math.min(moves.length, 15); i >= 1; i--) {
                     tempChess.reset();
                     
-                    // تطبيق النقلات
                     let valid = true;
                     for (let j = 0; j < i; j++) {
                         try {
@@ -1101,8 +1219,8 @@
                     
                     const fen = tempChess.fen();
                     
-                    // البحث عن تطابق FEN في قاعدة البيانات
-                    const match = eco.find(entry => entry.fen === fen);
+                    // البحث في قاعدة البيانات
+                    const match = openings.find(entry => entry.fen === fen);
                     
                     if (match) {
                         bestMatch = {
@@ -1110,94 +1228,20 @@
                             eco: match.eco,
                             moves: moves.slice(0, i).map(m => m.san).join(' '),
                             length: i,
-                            source: 'eco.json'
+                            source: 'github'
                         };
-                        break; // وجدنا أطول تطابق
+                        break;
                     }
                 }
                 
                 if (bestMatch) {
-                    console.log('✅ Opening found in ECO:', bestMatch.name);
-                    showToast(`📖 افتتاحية من ECO: ${bestMatch.name}`, 2000);
+                    console.log('✅ Opening found in GitHub:', bestMatch.name);
+                    showToast(`📖 ${bestMatch.name} (${bestMatch.eco})`, 3000);
                     return bestMatch;
                 }
                 
-                console.log('❌ No match found in ECO database');
-                
             } catch (error) {
-                console.error('❌ ECO.json detection failed:', error);
-            }
-            
-            return null;
-        }
-        
-        // استخدام Lichess Opening Explorer API
-        async function detectOpeningFromLichess(moves) {
-            if (!moves || moves.length < 1) return null;
-            
-            try {
-                console.log('🔍 Trying Lichess Opening Explorer API...');
-                
-                // بناء FEN بعد تطبيق النقلات
-                const tempChess = new Chess();
-                let lastValidPosition = null;
-                
-                // تطبيق النقلات واحدة تلو الأخرى
-                for (let i = 0; i < Math.min(moves.length, 15); i++) {
-                    const move = moves[i];
-                    tempChess.move(move);
-                    const fen = tempChess.fen();
-                    
-                    // استعلام Lichess API
-                    const response = await fetch(`https://explorer.lichess.org/lichess?variant=standard&speeds=blitz,rapid,classical&ratings=2000,2200,2500&fen=${encodeURIComponent(fen)}`, {
-                        method: 'GET',
-                        headers: {
-                            'Accept': 'application/json'
-                        }
-                    });
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        
-                        // إذا وجدنا اسم افتتاحية
-                        if (data.opening) {
-                            lastValidPosition = {
-                                name: data.opening.name || 'Unknown Opening',
-                                eco: data.opening.eco || '',
-                                fen: fen,
-                                length: i + 1,
-                                source: 'lichess'
-                            };
-                        } else if (lastValidPosition) {
-                            // وصلنا لنهاية الافتتاحية المعروفة
-                            break;
-                        }
-                    } else {
-                        console.warn(`❌ Lichess API returned status: ${response.status}`);
-                        break;
-                    }
-                    
-                    // تأخير بسيط لتجنب Rate Limiting
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                }
-                
-                if (lastValidPosition) {
-                    // إضافة النقلات إلى النتيجة
-                    const movesText = moves.slice(0, lastValidPosition.length).map(m => m.san).join(' ');
-                    const result = {
-                        ...lastValidPosition,
-                        moves: movesText
-                    };
-                    console.log('✅ Opening detected from Lichess:', result.name);
-                    showToast(`✅ افتتاحية من Lichess: ${result.name}`, 2000);
-                    return result;
-                }
-                
-                console.log('❌ Lichess API: No opening found');
-                
-            } catch (error) {
-                console.error('❌ Lichess Opening API failed:', error);
-                showToast('❌ فشل Lichess API، جاري المحاولة مع ECO.json...', 2000);
+                console.error('❌ GitHub opening detection failed:', error);
             }
             
             return null;
@@ -1207,28 +1251,28 @@
         async function detectOpening(moves) {
             console.log('🔍 Starting opening detection...');
             
-            // 1. محاولة Lichess API أولاً (الأدق)
-            const lichessResult = await detectOpeningFromLichess(moves);
+            // 1. محاولة Lichess Cloud أولاً (الأدق والأسرع)
+            const lichessResult = await detectOpeningFromLichessCloud(moves);
             if (lichessResult) {
                 return lichessResult;
             }
             
-            // 2. محاولة ECO.json (قاعدة بيانات شاملة)
-            const ecoResult = await detectOpeningFromECO(moves);
-            if (ecoResult) {
-                return ecoResult;
+            // 2. محاولة GitHub hosted openings
+            const githubResult = await detectOpeningFromGitHub(moves);
+            if (githubResult) {
+                return githubResult;
             }
             
             // 3. الرجوع لقاعدة البيانات المحلية كاحتياط أخير
             const localResult = detectOpeningLocal(moves);
             if (localResult) {
                 console.log('✅ Opening detected from local database:', localResult.name);
-                showToast(`📚 افتتاحية من القاعدة المحلية: ${localResult.name}`, 2000);
+                showToast(`📚 ${localResult.name} (${localResult.eco})`, 3000);
                 return localResult;
             }
             
             // 4. لم يتم العثور على افتتاحية
-            console.log('❌ No opening detected');
+            console.log('❌ No opening detected from any source');
             showToast('❌ لم يتم التعرف على الافتتاحية', 2000);
             return null;
         }
@@ -1613,26 +1657,25 @@
                 // عرض المصدر مع أيقونات واضحة
                 let sourceIcon = '';
                 let sourceText = '';
-                let sourceColor = '';
                 
-                if (openingInfo.source === 'lichess') {
+                if (openingInfo.source === 'lichess-cloud') {
                     sourceIcon = '🌐';
-                    sourceText = 'Lichess Database';
-                    sourceColor = '#1baca6'; // cyan
-                } else if (openingInfo.source === 'eco.json') {
+                    sourceText = 'Lichess Cloud Database';
+                } else if (openingInfo.source === 'github') {
                     sourceIcon = '📖';
-                    sourceText = 'ECO Database';
-                    sourceColor = '#5c9fc7'; // blue
+                    sourceText = 'GitHub Database';
                 } else {
                     sourceIcon = '📚';
                     sourceText = 'Local Database';
-                    sourceColor = '#a88865'; // brown
                 }
+                
+                // عرض عدد Book moves إذا كان متاحاً
+                const bookInfo = openingInfo.bookMoveCount ? ` (${openingInfo.bookMoveCount} book moves)` : '';
                 
                 openingElement.querySelector('.opening-name').innerHTML = `
                     <span style="color: var(--accent-gold)">${openingInfo.name}</span> 
-                    <span style="font-size:0.85em;opacity:0.8">(${openingInfo.eco})</span> 
-                    <span title="${sourceText}" style="font-size:0.95em;cursor:help;opacity:0.9">${sourceIcon}</span>
+                    ${openingInfo.eco ? `<span style="font-size:0.85em;opacity:0.8">(${openingInfo.eco})</span>` : ''}
+                    <span title="${sourceText}${bookInfo}" style="font-size:0.95em;cursor:help;opacity:0.9">${sourceIcon}</span>
                 `;
                 openingElement.querySelector('.opening-moves').textContent = openingInfo.moves;
             } else {
@@ -2439,19 +2482,36 @@
             resultsDiv.innerHTML = '<div class="text-center py-8"><div class="spinner mx-auto mb-4"></div><p style="color: var(--text-secondary)">جاري تحميل قاعدة البيانات...</p></div>';
             
             try {
-                // تحميل ECO.json
-                const eco = await loadECODatabase();
+                // محاولة تحميل من GitHub أولاً
+                const openings = await loadGitHubOpenings();
                 
-                if (eco && eco.length > 0) {
-                    allOpenings = eco;
-                    countDiv.textContent = `${eco.length.toLocaleString()} افتتاحية متاحة 📖`;
-                    displayOpenings(eco.slice(0, 50)); // عرض أول 50
+                if (openings && openings.length > 0) {
+                    allOpenings = openings;
+                    countDiv.innerHTML = `<span style="color: var(--accent-green)">${openings.length.toLocaleString()} افتتاحية متاحة 📖</span>`;
+                    displayOpenings(openings.slice(0, 50)); // عرض أول 50
+                    return;
+                }
+                
+                // إذا فشل GitHub، استخدم قاعدة البيانات المحلية
+                const localOpenings = Object.entries(openingsDatabase).map(([moves, data]) => ({
+                    name: data.name,
+                    eco: data.eco,
+                    moves: moves,
+                    source: 'local'
+                }));
+                
+                if (localOpenings.length > 0) {
+                    allOpenings = localOpenings;
+                    countDiv.innerHTML = `<span style="color: var(--accent-gold)">${localOpenings.length} افتتاحية محلية 📚</span>`;
+                    displayOpenings(localOpenings);
                 } else {
-                    countDiv.textContent = 'فشل تحميل القاعدة ❌';
+                    countDiv.innerHTML = '<span style="color: var(--loss-red)">فشل تحميل القاعدة ❌</span>';
                     resultsDiv.innerHTML = '<p class="text-center py-8" style="color: var(--text-secondary)">فشل تحميل قاعدة البيانات</p>';
                 }
+                
             } catch (error) {
                 console.error('Error loading openings:', error);
+                countDiv.innerHTML = '<span style="color: var(--loss-red)">حدث خطأ ❌</span>';
                 resultsDiv.innerHTML = '<p class="text-center py-8" style="color: var(--loss-red)">حدث خطأ في التحميل</p>';
             }
         }
