@@ -3,94 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>المكتبة العالمية للافتتاحيات</title>
+    <title>مستكشف افتتاحيات الشطرنج (ECO)</title>
     <style>
-        :root { --bg: #121212; --card: #1e1e1e; --primary: #00b4d8; --text: #e0e0e0; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
-        .container { max-width: 900px; margin: auto; }
-        .search-area { background: var(--card); padding: 25px; border-radius: 12px; position: sticky; top: 10px; z-index: 100; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
-        input { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid #333; background: #0a0a0a; color: white; box-sizing: border-box; font-size: 1.1rem; }
-        .stats-bar { margin-top: 10px; font-size: 0.9rem; color: var(--primary); font-weight: bold; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; margin-top: 25px; }
-        .card { background: var(--card); border-radius: 10px; padding: 15px; border-bottom: 4px solid #333; transition: 0.3s; position: relative; overflow: hidden; }
-        .card:hover { border-color: var(--primary); transform: translateY(-5px); }
-        .card h3 { margin: 0 0 10px; font-size: 1rem; line-height: 1.4; color: #fff; }
-        .moves { background: #000; padding: 10px; border-radius: 5px; color: #00f5d4; font-family: 'Courier New', monospace; font-size: 0.9rem; display: block; margin-top: 10px; }
-        .eco-tag { position: absolute; top: 10px; left: 10px; background: #333; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; }
-        .btn-copy { margin-top: 15px; width: 100%; padding: 8px; background: #2a2a2a; border: none; color: white; cursor: pointer; border-radius: 5px; }
-        .btn-copy:hover { background: #3d3d3d; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f9; padding: 20px; text-align: center; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; }
+        .search-box { margin-bottom: 20px; display: flex; gap: 10px; }
+        input { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; }
+        input:focus { border-color: #3498db; }
+        button { padding: 12px 25px; background: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        button:hover { background: #219150; }
+        button:disabled { background: #bdc3c7; cursor: not-allowed; }
+        #status { margin-bottom: 15px; color: #7f8c8d; font-size: 14px; }
+        .result-card { border-top: 2px solid #eee; margin-top: 20px; padding-top: 20px; text-align: right; display: none; }
+        .eco-code { display: inline-block; background: #e67e22; color: white; padding: 4px 10px; border-radius: 4px; font-weight: bold; margin-bottom: 10px; }
+        .opening-name { font-size: 24px; color: #2c3e50; margin: 5px 0; }
+        .moves { background: #ecf0f1; padding: 10px; border-radius: 6px; font-family: monospace; color: #2980b9; }
+        .error { color: #e74c3c; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="search-area">
-        <h1>🔍 المكتبة العالمية للافتتاحيات</h1>
-        <input type="text" id="searchInput" placeholder="ابحث عن افتتاحية (مثلاً: Sicilian أو d4 d5)..." oninput="handleSearch()">
-        <div id="status" class="stats-bar">جاري الاتصال بالمكتبة العالمية...</div>
+    <h1>مستكشف افتتاحيات الشطرنج ♟️</h1>
+    <div id="status">جاري تحميل بيانات الافتتاحيات (12,000+)...</div>
+
+    <div class="search-box">
+        <input type="text" id="fenInput" placeholder="أدخل كود FEN (مثلاً: rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1)">
+        <button id="searchBtn" disabled>بحث</button>
     </div>
 
-    <div id="grid" class="grid"></div>
+    <div id="error" class="error"></div>
+
+    <div id="result" class="result-card">
+        <div class="eco-code" id="resEco"></div>
+        <div class="opening-name" id="resName"></div>
+        <p><strong>النقلات:</strong></p>
+        <div class="moves" id="resMoves"></div>
+    </div>
 </div>
 
 <script>
-    let db = [];
-    let filtered = [];
+    const baseUrl = "https://raw.githubusercontent.com/chess-openings/eco.json/main/data/";
+    const files = ["ecoA.json", "ecoB.json", "ecoC.json", "ecoD.json", "ecoE.json", "eco_interpolated.json"];
+    let openingDb = {};
 
-    // الربط بمكتبة عالمية مفتوحة المصدر عبر CDN (تجاوز CORS)
-    async function initDB() {
-        const status = document.getElementById('status');
+    // 1. جلب البيانات من GitHub ودمجها
+    async function initDatabase() {
         try {
-            // استخدام رابط CDN لملف JSON عالمي يحتوي على آلاف الافتتاحيات
-            const url = 'https://cdn.jsdelivr.net/gh/niklasf/chess-openings@master/dist/openings.json';
-            const response = await fetch(url);
-            db = await response.json();
+            const fetchPromises = files.map(file => fetch(baseUrl + file).then(res => res.json()));
+            const allData = await Promise.all(fetchPromises);
             
-            status.innerText = `✅ متصل بنجاح: تم جلب ${db.length} افتتاحية من القاعدة العالمية.`;
-            filtered = db.slice(0, 50); // عرض أول 50 فقط للسرعة
-            render();
-        } catch (e) {
-            status.innerText = "❌ فشل الربط بالمكتبة. جرب تحديث الصفحة.";
-            console.error(e);
+            // دمج كل الملفات في كائن واحد (المفاتيح هي الـ FEN)
+            allData.forEach(data => {
+                openingDb = { ...openingDb, ...data };
+            });
+
+            document.getElementById('status').innerText = "✅ تم تحميل 12,000+ افتتاحية. جاهز للبحث!";
+            document.getElementById('searchBtn').disabled = false;
+        } catch (err) {
+            document.getElementById('status').innerHTML = "<span class='error'>فشل تحميل البيانات. تأكد من اتصالك بالإنترنت.</span>";
+            console.error(err);
         }
     }
 
-    function handleSearch() {
-        const query = document.getElementById('searchInput').value.toLowerCase().trim();
-        if (query === "") {
-            filtered = db.slice(0, 50);
+    // 2. معالجة FEN للبحث (تنظيف العدادات غير الضرورية)
+    function normalizeFen(fen) {
+        // FEN يتكون من 6 أجزاء، الافتتاحيات غالباً لا تهتم بآخر جزئين (عداد النقلات)
+        const parts = fen.trim().split(/\s+/);
+        if (parts.length < 4) return fen.trim();
+        return parts.slice(0, 4).join(" "); // نأخذ القطع، الدور، التبييت، ومربع التجاوز
+    }
+
+    // 3. وظيفة البحث
+    function searchOpening() {
+        const inputFen = document.getElementById('fenInput').value.trim();
+        const errorDiv = document.getElementById('error');
+        const resultDiv = document.getElementById('result');
+        
+        errorDiv.innerText = "";
+        resultDiv.style.display = "none";
+
+        if (!inputFen) return;
+
+        // البحث المباشر
+        let match = openingDb[inputFen];
+
+        // إذا لم يجد، نحاول البحث بالـ FEN المختصر (بدون عدادات النقلات)
+        if (!match) {
+            const shortFen = normalizeFen(inputFen);
+            // نبحث في قاعدة البيانات عن أي مفتاح يبدأ بهذا الـ FEN المختصر
+            const foundKey = Object.keys(openingDb).find(k => k.startsWith(shortFen));
+            if (foundKey) match = openingDb[foundKey];
+        }
+
+        if (match) {
+            document.getElementById('resEco').innerText = match.eco;
+            document.getElementById('resName').innerText = match.name;
+            document.getElementById('resMoves').innerText = match.moves || "غير متوفرة";
+            resultDiv.style.display = "block";
         } else {
-            // بحث ذكي في الأسماء والنقلات معاً
-            filtered = db.filter(item => 
-                item.name.toLowerCase().includes(query) || 
-                item.pgn.toLowerCase().includes(query)
-            ).slice(0, 50);
+            errorDiv.innerText = "لم يتم العثور على افتتاحية مطابقة لهذه الوضعية.";
         }
-        render();
     }
 
-    function render() {
-        const grid = document.getElementById('grid');
-        grid.innerHTML = filtered.map(item => `
-            <div class="card">
-                <span class="eco-tag">${item.eco}</span>
-                <div style="margin-top: 15px;">
-                    <h3>${item.name}</h3>
-                    <code class="moves">${item.pgn}</code>
-                    <button class="btn-copy" onclick="copyMoves('${item.pgn}', this)">نسخ النقلات</button>
-                </div>
-            </div>
-        `).join('');
-    }
+    // تشغيل التحميل عند فتح الصفحة
+    initDatabase();
 
-    function copyMoves(text, btn) {
-        navigator.clipboard.writeText(text);
-        const originalText = btn.innerText;
-        btn.innerText = "تم النسخ! ✓";
-        setTimeout(() => btn.innerText = originalText, 1000);
-    }
-
-    initDB();
+    // ربط الأزرار
+    document.getElementById('searchBtn').addEventListener('click', searchOpening);
+    document.getElementById('fenInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') searchOpening();
+    });
 </script>
 
 </body>
