@@ -3,118 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مستكشف افتتاحيات الشطرنج (ECO)</title>
+    <title>مستكشف افتتاحيات الشطرنج</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f9; padding: 20px; text-align: center; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { color: #2c3e50; }
-        .search-box { margin-bottom: 20px; display: flex; gap: 10px; }
-        input { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; }
-        input:focus { border-color: #3498db; }
-        button { padding: 12px 25px; background: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; transition: 0.3s; }
-        button:hover { background: #219150; }
-        button:disabled { background: #bdc3c7; cursor: not-allowed; }
-        #status { margin-bottom: 15px; color: #7f8c8d; font-size: 14px; }
-        .result-card { border-top: 2px solid #eee; margin-top: 20px; padding-top: 20px; text-align: right; display: none; }
-        .eco-code { display: inline-block; background: #e67e22; color: white; padding: 4px 10px; border-radius: 4px; font-weight: bold; margin-bottom: 10px; }
-        .opening-name { font-size: 24px; color: #2c3e50; margin: 5px 0; }
-        .moves { background: #ecf0f1; padding: 10px; border-radius: 6px; font-family: monospace; color: #2980b9; }
-        .error { color: #e74c3c; font-weight: bold; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; padding: 20px; text-align: center; color: #333; }
+        .container { max-width: 700px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h1 { color: #1a2a6c; margin-bottom: 5px; }
+        p.subtitle { color: #666; margin-bottom: 25px; }
+        .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
+        input { flex: 1; padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; outline: none; transition: 0.3s; }
+        input:focus { border-color: #1a2a6c; }
+        button { padding: 15px 25px; background: #1a2a6c; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        button:hover { background: #b21f1f; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        #status { margin-bottom: 15px; font-size: 14px; padding: 10px; border-radius: 5px; }
+        .loading { background: #fff3cd; color: #856404; }
+        .ready { background: #d4edda; color: #155724; }
+        .error-msg { background: #f8d7da; color: #721c24; }
+        .result-card { border: 2px solid #eee; border-radius: 12px; margin-top: 20px; padding: 20px; text-align: right; display: none; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .eco-badge { display: inline-block; background: #e67e22; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; }
+        .opening-name { font-size: 22px; font-weight: bold; margin: 15px 0; color: #2c3e50; }
+        .moves-label { font-weight: bold; color: #7f8c8d; display: block; margin-top: 10px; }
+        .moves-box { background: #f8f9fa; padding: 15px; border-radius: 8px; font-family: 'Courier New', Courier, monospace; color: #2980b9; margin-top: 5px; word-break: break-all; line-height: 1.6; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>مستكشف افتتاحيات الشطرنج ♟️</h1>
-    <div id="status">جاري تحميل بيانات الافتتاحيات (12,000+)...</div>
+    <h1>مستكشف الافتتاحيات ♟️</h1>
+    <p class="subtitle">ابحث عن اسم الافتتاحية باستخدام كود FEN</p>
+    
+    <div id="status" class="loading">جاري جلب بيانات 12,000 افتتاحية من GitHub...</div>
 
     <div class="search-box">
-        <input type="text" id="fenInput" placeholder="أدخل كود FEN (مثلاً: rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1)">
+        <input type="text" id="fenInput" placeholder="أدخل كود FEN هنا...">
         <button id="searchBtn" disabled>بحث</button>
     </div>
 
-    <div id="error" class="error"></div>
-
     <div id="result" class="result-card">
-        <div class="eco-code" id="resEco"></div>
+        <span class="eco-badge" id="resEco"></span>
         <div class="opening-name" id="resName"></div>
-        <p><strong>النقلات:</strong></p>
-        <div class="moves" id="resMoves"></div>
+        <span class="moves-label">تسلسل النقلات:</span>
+        <div class="moves-box" id="resMoves"></div>
     </div>
 </div>
 
 <script>
-    const baseUrl = "https://raw.githubusercontent.com/chess-openings/eco.json/main/data/";
-    const files = ["ecoA.json", "ecoB.json", "ecoC.json", "ecoD.json", "ecoE.json", "eco_interpolated.json"];
-    let openingDb = {};
+    // المسار الصحيح للمستودع على GitHub
+    const baseUrl = "https://raw.githubusercontent.com/chess-openings/eco.json/master/";
+    const files = ["A.json", "B.json", "C.json", "D.json", "E.json"];
+    
+    // كائن لتخزين البيانات (Key: FEN, Value: Opening Data)
+    let openingDb = new Map();
 
-    // 1. جلب البيانات من GitHub ودمجها
-    async function initDatabase() {
+    async function loadData() {
+        const status = document.getElementById('status');
+        const btn = document.getElementById('searchBtn');
+
         try {
-            const fetchPromises = files.map(file => fetch(baseUrl + file).then(res => res.json()));
-            const allData = await Promise.all(fetchPromises);
-            
-            // دمج كل الملفات في كائن واحد (المفاتيح هي الـ FEN)
-            allData.forEach(data => {
-                openingDb = { ...openingDb, ...data };
-            });
+            for (const file of files) {
+                status.innerText = `جاري تحميل الملف ${file}...`;
+                const response = await fetch(baseUrl + file);
+                if (!response.ok) throw new Error("Network response was not ok");
+                const data = await response.json();
+                
+                // تخزين البيانات في Map للبحث السريع جداً
+                // البيانات في هذا المستودع عبارة عن Array
+                data.forEach(item => {
+                    // نستخدم الـ FEN كمفتاح، ونقوم بتنظيفه قليلاً لضمان المطابقة
+                    if (item.fen) {
+                        openingDb.set(normalizeFen(item.fen), item);
+                    }
+                });
+            }
 
-            document.getElementById('status').innerText = "✅ تم تحميل 12,000+ افتتاحية. جاهز للبحث!";
-            document.getElementById('searchBtn').disabled = false;
+            status.className = "ready";
+            status.innerText = `✅ تم التحميل! ${openingDb.size} افتتاحية جاهزة للبحث.`;
+            btn.disabled = false;
         } catch (err) {
-            document.getElementById('status').innerHTML = "<span class='error'>فشل تحميل البيانات. تأكد من اتصالك بالإنترنت.</span>";
-            console.error(err);
+            status.className = "error-msg";
+            status.innerText = "❌ فشل تحميل البيانات. تأكد من أن المستودع متاح أو جرب لاحقاً.";
+            console.error("Error loading JSON:", err);
         }
     }
 
-    // 2. معالجة FEN للبحث (تنظيف العدادات غير الضرورية)
+    // تنظيف كود FEN للمقارنة (تجاهل عداد النقلات في الأخير)
     function normalizeFen(fen) {
-        // FEN يتكون من 6 أجزاء، الافتتاحيات غالباً لا تهتم بآخر جزئين (عداد النقلات)
+        if (!fen) return "";
         const parts = fen.trim().split(/\s+/);
-        if (parts.length < 4) return fen.trim();
-        return parts.slice(0, 4).join(" "); // نأخذ القطع، الدور، التبييت، ومربع التجاوز
+        // نأخذ أول 4 أجزاء فقط (القطع، الدور، التبييت، التجاوز)
+        return parts.slice(0, 4).join(" ");
     }
 
-    // 3. وظيفة البحث
-    function searchOpening() {
-        const inputFen = document.getElementById('fenInput').value.trim();
-        const errorDiv = document.getElementById('error');
+    function search() {
+        const input = document.getElementById('fenInput').value.trim();
         const resultDiv = document.getElementById('result');
         
-        errorDiv.innerText = "";
-        resultDiv.style.display = "none";
+        if (!input) return;
 
-        if (!inputFen) return;
-
-        // البحث المباشر
-        let match = openingDb[inputFen];
-
-        // إذا لم يجد، نحاول البحث بالـ FEN المختصر (بدون عدادات النقلات)
-        if (!match) {
-            const shortFen = normalizeFen(inputFen);
-            // نبحث في قاعدة البيانات عن أي مفتاح يبدأ بهذا الـ FEN المختصر
-            const foundKey = Object.keys(openingDb).find(k => k.startsWith(shortFen));
-            if (foundKey) match = openingDb[foundKey];
-        }
+        const normalizedInput = normalizeFen(input);
+        const match = openingDb.get(normalizedInput);
 
         if (match) {
-            document.getElementById('resEco').innerText = match.eco;
+            document.getElementById('resEco').innerText = "ECO: " + match.eco;
             document.getElementById('resName').innerText = match.name;
-            document.getElementById('resMoves').innerText = match.moves || "غير متوفرة";
+            document.getElementById('resMoves').innerText = match.moves || "غير متوفر";
             resultDiv.style.display = "block";
         } else {
-            errorDiv.innerText = "لم يتم العثور على افتتاحية مطابقة لهذه الوضعية.";
+            alert("عذراً، لم يتم العثور على افتتاحية مطابقة لهذه الوضعية بالضبط.");
+            resultDiv.style.display = "none";
         }
     }
 
-    // تشغيل التحميل عند فتح الصفحة
-    initDatabase();
+    // بدء التحميل
+    loadData();
 
-    // ربط الأزرار
-    document.getElementById('searchBtn').addEventListener('click', searchOpening);
-    document.getElementById('fenInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') searchOpening();
-    });
+    // أحداث الأزرار
+    document.getElementById('searchBtn').onclick = search;
+    document.getElementById('fenInput').onkeypress = (e) => {
+        if (e.key === 'Enter') search();
+    };
 </script>
 
 </body>
