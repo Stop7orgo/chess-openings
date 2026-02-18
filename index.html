@@ -3,110 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مستكشف الافتتاحيات الاحترافي</title>
+    <title>دليل افتتاحيات الشطرنج</title>
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #eef2f3; padding: 20px; color: var(--primary); }
-        .container { max-width: 600px; margin: 40px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        h1 { text-align: center; margin-bottom: 10px; font-size: 24px; }
-        .description { text-align: center; color: #7f8c8d; margin-bottom: 25px; font-size: 14px; }
+        :root { --main-bg: #f8f9fa; --card-bg: #ffffff; --primary: #2c3e50; --accent: #2980b9; --success: #27ae60; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--main-bg); color: var(--primary); margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 650px; background: var(--card-bg); padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+        h1 { text-align: center; font-size: 24px; margin-bottom: 10px; color: #1a1a1a; }
+        .status-bar { font-size: 13px; text-align: center; padding: 8px; margin-bottom: 20px; border-radius: 8px; transition: 0.3s; }
+        .loading { background: #fff3cd; color: #856404; }
+        .ready { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
         
-        .search-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        input { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 15px; outline: none; transition: 0.3s; }
-        input:focus { border-color: var(--accent); }
-        
-        button { padding: 12px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .search-area { display: flex; gap: 10px; margin-bottom: 25px; }
+        input { flex: 1; padding: 14px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 15px; outline: none; transition: 0.2s; }
+        input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(41, 128, 185, 0.1); }
+        button { padding: 12px 25px; background: var(--primary); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.2s; }
         button:hover { background: var(--accent); }
-        button:disabled { background: #ccc; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
 
-        .loader { display: none; margin: 20px auto; border: 4px solid #f3f3f3; border-top: 4px solid var(--accent); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        #result { display: none; margin-top: 25px; padding: 20px; border-radius: 10px; background: #f8f9fa; border-right: 5px solid var(--success); animation: slideUp 0.4s ease; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .eco-tag { background: var(--success); color: white; padding: 3px 10px; border-radius: 5px; font-size: 12px; font-weight: bold; }
-        .opening-name { font-size: 20px; font-weight: bold; margin: 10px 0; color: #1a2a6c; }
-        .details { font-size: 14px; color: #555; line-height: 1.6; }
-        .error { color: #e74c3c; background: #fdf2f2; padding: 10px; border-radius: 8px; display: none; margin-top: 20px; text-align: center; }
+        .result-box { display: none; border-right: 6px solid var(--success); background: #fdfdfd; padding: 20px; border-radius: 12px; border: 1px solid #eee; border-right: 6px solid var(--success); animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .eco-code { display: inline-block; background: #e67e22; color: white; padding: 4px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; margin-bottom: 10px; }
+        .name { font-size: 22px; font-weight: bold; margin-bottom: 10px; color: #2c3e50; line-height: 1.4; }
+        .moves { background: #f1f3f5; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 15px; color: #2980b9; word-break: break-all; }
+        .label { font-size: 13px; color: #7f8c8d; margin-bottom: 5px; display: block; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>مستكشف افتتاحيات الشطرنج ♟️</h1>
-    <p class="description">أدخل كود FEN لمعرفة اسم الافتتاحية وتفاصيلها</p>
+<div class="app-container">
+    <h1>مستكشف الافتتاحيات ♟️</h1>
+    <div id="status" class="status-bar loading">جاري جلب البيانات من الموزع العالمي (JSDelivr)...</div>
 
-    <div class="search-group">
-        <input type="text" id="fenInput" placeholder="مثال: rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1">
-        <button id="searchBtn">بحث</button>
+    <div class="search-area">
+        <input type="text" id="fenInput" placeholder="الصق كود FEN هنا (مثلاً: r1bqkb...)">
+        <button id="searchBtn" disabled>بحث</button>
     </div>
 
-    <div id="loader" class="loader"></div>
-    <div id="error" class="error"></div>
-
-    <div id="result">
-        <span class="eco-tag" id="resEco"></span>
-        <div class="opening-name" id="resName"></div>
-        <div class="details">
-            <strong>أكثر النقلات لعباً في هذا الوضع:</strong>
-            <div id="resMoves" style="margin-top:5px; color: var(--accent); font-family: monospace;"></div>
-        </div>
+    <div id="result" class="result-box">
+        <span class="eco-code" id="resEco"></span>
+        <span class="label">اسم الافتتاحية:</span>
+        <div class="name" id="resName"></div>
+        <span class="label">تسلسل النقلات:</span>
+        <div class="moves" id="resMoves"></div>
     </div>
 </div>
 
 <script>
-    const searchBtn = document.getElementById('searchBtn');
-    const fenInput = document.getElementById('fenInput');
-    const loader = document.getElementById('loader');
-    const resultDiv = document.getElementById('result');
-    const errorDiv = document.getElementById('error');
+    // استخدام JSDelivr كبديل موثوق جداً لـ GitHub
+    const cdnUrl = "https://cdn.jsdelivr.net/gh/chess-openings/eco.json@master/";
+    const files = ["A.json", "B.json", "C.json", "D.json", "E.json"];
+    let openingDb = new Map();
 
-    async function getOpeningInfo() {
-        const fen = fenInput.value.trim();
-        if (!fen) return;
-
-        // إعداد الواجهة
-        resultDiv.style.display = 'none';
-        errorDiv.style.display = 'none';
-        loader.style.display = 'block';
-        searchBtn.disabled = true;
+    async function init() {
+        const status = document.getElementById('status');
+        const btn = document.getElementById('searchBtn');
 
         try {
-            // استخدام Lichess API (Explorer)
-            // نستخدم قاعدة بيانات Masters للحصول على أدق الأسماء
-            const url = `https://explorer.lichess.ovh/masters?fen=${encodeURIComponent(fen)}`;
-            
-            const response = await fetch(url);
-            if (!response.ok) throw new Error("فشل الاتصال بالخادم");
-            
-            const data = await response.json();
+            // تحميل الملفات بالتوازي لسرعة أكبر
+            const promises = files.map(file => 
+                fetch(cdnUrl + file).then(r => {
+                    if(!r.ok) throw new Error();
+                    return r.json();
+                })
+            );
 
-            if (data.opening) {
-                document.getElementById('resEco').innerText = data.opening.eco;
-                document.getElementById('resName').innerText = data.opening.name;
-                
-                // عرض أفضل 3 نقلات تالية كمكافأة
-                const topMoves = data.moves.slice(0, 3).map(m => m.san).join(' , ');
-                document.getElementById('resMoves').innerText = topMoves || "لا توجد نقلات مسجلة (نهاية التفريعة)";
-                
-                resultDiv.style.display = 'block';
-            } else {
-                throw new Error("هذه الوضعية غير مسجلة كافتتاحية معروفة.");
-            }
+            const results = await Promise.all(promises);
+            
+            results.forEach(data => {
+                data.forEach(item => {
+                    if (item.fen) {
+                        // نقوم بتخزين النسخة المختصرة من الـ FEN كمفتاح للبحث
+                        openingDb.set(cleanFen(item.fen), item);
+                    }
+                });
+            });
+
+            status.className = "status-bar ready";
+            status.innerText = `✅ جاهز! تم تحميل ${openingDb.size} افتتاحية.`;
+            btn.disabled = false;
+
         } catch (err) {
-            errorDiv.innerText = err.message;
-            errorDiv.style.display = 'block';
-        } finally {
-            loader.style.display = 'none';
-            searchBtn.disabled = false;
+            status.className = "status-bar error";
+            status.innerText = "❌ فشل الاتصال. يرجى التأكد من الإنترنت أو تحديث الصفحة.";
+            console.error(err);
         }
     }
 
-    searchBtn.addEventListener('click', getOpeningInfo);
-    fenInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') getOpeningInfo();
-    });
+    // تنظيف الـ FEN لمطابقة دقيقة (نأخذ أول 4 أجزاء فقط)
+    function cleanFen(fen) {
+        if (!fen) return "";
+        return fen.trim().split(/\s+/).slice(0, 4).join(" ");
+    }
+
+    function handleSearch() {
+        const input = document.getElementById('fenInput').value.trim();
+        const resultDiv = document.getElementById('result');
+        
+        if (!input) return;
+
+        const searchKey = cleanFen(input);
+        const match = openingDb.get(searchKey);
+
+        if (match) {
+            document.getElementById('resEco').innerText = match.eco;
+            document.getElementById('resName').innerText = match.name;
+            document.getElementById('resMoves').innerText = match.moves || "تفريعة رئيسية";
+            resultDiv.style.display = "block";
+        } else {
+            alert("لم يتم العثور على اسم لهذه الوضعية. تأكد من أن الـ FEN صحيح ومن بداية الدور.");
+            resultDiv.style.display = "none";
+        }
+    }
+
+    init();
+
+    document.getElementById('searchBtn').onclick = handleSearch;
+    document.getElementById('fenInput').onkeypress = (e) => { if (e.key === 'Enter') handleSearch(); };
 </script>
 
 </body>
