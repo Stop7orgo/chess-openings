@@ -1046,6 +1046,120 @@
             return null;
         }
         
+        // Lichess TSV Files Cache
+        let lichessTSVCache = {};
+        
+        // تحميل ملف TSV من Lichess
+        async function loadLichessTSV(ecoPrefix) {
+            // إذا محمّل سابقاً
+            if (lichessTSVCache[ecoPrefix]) {
+                return lichessTSVCache[ecoPrefix];
+            }
+            
+            try {
+                const url = `https://raw.githubusercontent.com/lichess-org/chess-openings/master/${ecoPrefix}.tsv`;
+                const response = await fetch(url);
+                
+                if (!response.ok) return null;
+                
+                const text = await response.text();
+                const lines = text.split('\n').slice(1); // تخطي header
+                
+                const openings = [];
+                for (const line of lines) {
+                    if (!line.trim()) continue;
+                    
+                    const parts = line.split('\t');
+                    if (parts.length >= 4) {
+                        openings.push({
+                            eco: parts[0],
+                            name: parts[1],
+                            pgn: parts[2],
+                            uci: parts[3],
+                            epd: parts[4] || ''
+                        });
+                    }
+                }
+                
+                lichessTSVCache[ecoPrefix] = openings;
+                console.log(`✅ Loaded ${openings.length} openings from ${ecoPrefix}.tsv`);
+                return openings;
+                
+            } catch (error) {
+                console.warn(`Failed to load ${ecoPrefix}.tsv:`, error);
+                return null;
+            }
+        }
+        
+        // البحث في Lichess TSV
+        async function detectOpeningFromLichessTSV(moves) {
+            if (!moves || moves.length < 1) return null;
+            
+            try {
+                console.log('🔍 Searching Lichess TSV database...');
+                
+                const tempChess = new Chess();
+                let bestMatch = null;
+                
+                // جرب من الأطول للأقصر
+                for (let i = Math.min(moves.length, 20); i >= 1; i--) {
+                    tempChess.reset();
+                    
+                    let valid = true;
+                    for (let j = 0; j < i; j++) {
+                        try {
+                            tempChess.move(moves[j]);
+                        } catch {
+                            valid = false;
+                            break;
+                        }
+                    }
+                    
+                    if (!valid) continue;
+                    
+                    const fen = tempChess.fen();
+                    const movesStr = moves.slice(0, i).map(m => m.san).join(' ');
+                    
+                    // جرب جميع ملفات TSV المحتملة (A-E شائعة)
+                    const commonPrefixes = ['a', 'b', 'c', 'd', 'e'];
+                    
+                    for (const prefix of commonPrefixes) {
+                        const openings = await loadLichessTSV(prefix);
+                        if (!openings) continue;
+                        
+                        // البحث بالـ PGN
+                        const match = openings.find(entry => {
+                            return entry.pgn === movesStr || entry.epd === fen;
+                        });
+                        
+                        if (match) {
+                            bestMatch = {
+                                name: match.name,
+                                eco: match.eco,
+                                moves: movesStr,
+                                length: i,
+                                source: 'lichess-tsv'
+                            };
+                            break;
+                        }
+                    }
+                    
+                    if (bestMatch) break;
+                }
+                
+                if (bestMatch) {
+                    console.log('✅ Opening found in Lichess TSV:', bestMatch.name);
+                    showToast(`📖 ${bestMatch.name} (${bestMatch.eco})`, 3000);
+                    return bestMatch;
+                }
+                
+            } catch (error) {
+                console.error('❌ Lichess TSV detection failed:', error);
+            }
+            
+            return null;
+        }
+        
         // استخدام Lichess Cloud API (الطريقة المثلى - مثل app-old.js)
         async function detectOpeningFromLichessCloud(moves) {
             if (!moves || moves.length < 1) return null;
@@ -1247,23 +1361,29 @@
             return null;
         }
         
-        // الدالة الرئيسية للتعرف على الافتتاحيات
+        // الدالة الرئيسية للتعرف على الافتتاحيات (4 طبقات)
         async function detectOpening(moves) {
             console.log('🔍 Starting opening detection...');
             
-            // 1. محاولة Lichess Cloud أولاً (الأدق والأسرع)
-            const lichessResult = await detectOpeningFromLichessCloud(moves);
-            if (lichessResult) {
-                return lichessResult;
+            // 1. محاولة Lichess Cloud أولاً (الأسرع والأدق)
+            const lichessCloudResult = await detectOpeningFromLichessCloud(moves);
+            if (lichessCloudResult) {
+                return lichessCloudResult;
             }
             
-            // 2. محاولة GitHub hosted openings
+            // 2. محاولة Lichess TSV (قاعدة بيانات ضخمة)
+            const lichessTSVResult = await detectOpeningFromLichessTSV(moves);
+            if (lichessTSVResult) {
+                return lichessTSVResult;
+            }
+            
+            // 3. محاولة GitHub hosted openings (احتياط)
             const githubResult = await detectOpeningFromGitHub(moves);
             if (githubResult) {
                 return githubResult;
             }
             
-            // 3. الرجوع لقاعدة البيانات المحلية كاحتياط أخير
+            // 4. الرجوع لقاعدة البيانات المحلية كاحتياط أخير
             const localResult = detectOpeningLocal(moves);
             if (localResult) {
                 console.log('✅ Opening detected from local database:', localResult.name);
@@ -1271,7 +1391,7 @@
                 return localResult;
             }
             
-            // 4. لم يتم العثور على افتتاحية
+            // 5. لم يتم العثور على افتتاحية
             console.log('❌ No opening detected from any source');
             showToast('❌ لم يتم التعرف على الافتتاحية', 2000);
             return null;
@@ -1660,12 +1780,15 @@
                 
                 if (openingInfo.source === 'lichess-cloud') {
                     sourceIcon = '🌐';
-                    sourceText = 'Lichess Cloud Database';
-                } else if (openingInfo.source === 'github') {
+                    sourceText = 'Lichess Cloud API';
+                } else if (openingInfo.source === 'lichess-tsv') {
                     sourceIcon = '📖';
+                    sourceText = 'Lichess Official Database';
+                } else if (openingInfo.source === 'github') {
+                    sourceIcon = '📚';
                     sourceText = 'GitHub Database';
                 } else {
-                    sourceIcon = '📚';
+                    sourceIcon = '💾';
                     sourceText = 'Local Database';
                 }
                 
@@ -2482,17 +2605,40 @@
             resultsDiv.innerHTML = '<div class="text-center py-8"><div class="spinner mx-auto mb-4"></div><p style="color: var(--text-secondary)">جاري تحميل قاعدة البيانات...</p></div>';
             
             try {
-                // محاولة تحميل من GitHub أولاً
-                const openings = await loadGitHubOpenings();
+                // محاولة تحميل Lichess TSV أولاً (الأفضل)
+                const lichessOpenings = [];
+                const prefixes = ['a', 'b', 'c', 'd', 'e']; // الأكثر شيوعاً
                 
-                if (openings && openings.length > 0) {
-                    allOpenings = openings;
-                    countDiv.innerHTML = `<span style="color: var(--accent-green)">${openings.length.toLocaleString()} افتتاحية متاحة 📖</span>`;
-                    displayOpenings(openings.slice(0, 50)); // عرض أول 50
+                for (const prefix of prefixes) {
+                    const openings = await loadLichessTSV(prefix);
+                    if (openings) {
+                        lichessOpenings.push(...openings.map(o => ({
+                            name: o.name,
+                            eco: o.eco,
+                            moves: o.pgn,
+                            source: 'lichess-tsv'
+                        })));
+                    }
+                }
+                
+                if (lichessOpenings.length > 0) {
+                    allOpenings = lichessOpenings;
+                    countDiv.innerHTML = `<span style="color: var(--accent-green)">${lichessOpenings.length.toLocaleString()} افتتاحية من Lichess 📖</span>`;
+                    displayOpenings(lichessOpenings.slice(0, 50));
                     return;
                 }
                 
-                // إذا فشل GitHub، استخدم قاعدة البيانات المحلية
+                // إذا فشل Lichess TSV، جرب GitHub
+                const githubOpenings = await loadGitHubOpenings();
+                
+                if (githubOpenings && githubOpenings.length > 0) {
+                    allOpenings = githubOpenings;
+                    countDiv.innerHTML = `<span style="color: var(--accent-cyan)">${githubOpenings.length.toLocaleString()} افتتاحية من GitHub 📚</span>`;
+                    displayOpenings(githubOpenings.slice(0, 50));
+                    return;
+                }
+                
+                // إذا فشل كل شيء، استخدم المحلية
                 const localOpenings = Object.entries(openingsDatabase).map(([moves, data]) => ({
                     name: data.name,
                     eco: data.eco,
@@ -2502,7 +2648,7 @@
                 
                 if (localOpenings.length > 0) {
                     allOpenings = localOpenings;
-                    countDiv.innerHTML = `<span style="color: var(--accent-gold)">${localOpenings.length} افتتاحية محلية 📚</span>`;
+                    countDiv.innerHTML = `<span style="color: var(--accent-gold)">${localOpenings.length} افتتاحية محلية 💾</span>`;
                     displayOpenings(localOpenings);
                 } else {
                     countDiv.innerHTML = '<span style="color: var(--loss-red)">فشل تحميل القاعدة ❌</span>';
