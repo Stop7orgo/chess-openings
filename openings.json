@@ -268,5 +268,605 @@
     "eco": "A02",
     "fen": "rnbqkbnr/pppppppp/8/8/5P2/8/PPPPP1PP/RNBQKBNR b KQkq f3 0 1",
     "moves": "f4"
+  },
+  {
+    "eco": "A00",
+    "name": "Amar Opening",
+    "moves": "1. Nh3",
+    "fen": ""
+  },
+  {
+    "eco": "A00",
+    "name": "Amar Opening: Paris Gambit",
+    "moves": "1. Nh3 d5 2. g3 e5 3. f4",
+    "fen": ""
+  },
+  {
+    "eco": "A00",
+    "name": "Amar Opening: Paris Gambit, Gent Gambit",
+    "moves": "1. Nh3 d5 2. g3 e5 3. f4 Bxh3 4. Bxh3 exf4 5. O-O fxg3 6. hxg3",
+    "fen": ""
+  },
+  {
+    "eco": "A45",
+    "name": "Amazon Attack: Siberian Attack",
+    "moves": "1. d4 Nf6 2. Nc3 d5 3. Qd3",
+    "fen": ""
+  },
+  {
+    "eco": "A00",
+    "name": "Amsterdam Attack",
+    "moves": "1. e3 e5 2. c4 d6 3. Nc3 Nc6 4. b3 Nf6",
+    "fen": ""
+  },
+  {
+    "eco": "A00",
+    "name": "Anderssen's Opening",
+    "moves": "1. a3",
+    "fen": ""
+  },
+  {
+    "eco": "A00",
+    "name": "Anderssen's Opening: Polish Gambit",
+    "moves": "1. a3 a5 2. b4",
+    "fen": ""
+  },
+  {
+    "eco": "A40",
+    "name": "Australian Defense",
+    "moves": "1. d4 Na6",
+    "fen": ""
+  },
+  {
+    "eco": "A00",
+    "name": "Barnes Opening",
+    "moves": "1. f3",
+    "fen": ""
+  },
+  {
+    "eco": "A00",
+    "name": "Barnes Opening: Fool's Mate",
+    "moves": "1. f3 e5 2. g4 Qh4#",
+    "fen": ""
+  },
+  {
+    "eco": "A00",
+    "name": "Barnes Opening: Gedult Gambit",
+    "moves": "1. f3 d5 2. e4 g6 3. d4 dxe4 4. c3",
+    "fen": ""
+  },
+  {
+    "eco": "A00",
+    "name": "Barnes Opening: Gedult Gambit",
+    "moves": "1. f3 f5 2. e4 fxe4 3. Nc3",
+    "fen": ""
+  },
+  {
+    "eco": "A00",
+    "name": "Barnes Opening: Hammerschlag",
+    "moves": "1. f3 e5 2. Kf2",
+    "fen": ""
+  },
+  {
+    "eco": "A57",
+    "name": "Benko Gambit",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 b5",
+    "fen": ""
+  },
+  {
+    "eco": "A59",
+    "name": "Benko Gambit",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 b5 4. cxb5 a6 5. bxa6 g6 6. Nc3 Bxa6 7. e4 Bxf1 8. Kxf1 d6 9. g3",
+    "fen": ""
+  },
+  {
+    "eco": "A57",
+    "name": "Benko Gambit Accepted",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 b5 4. cxb5 a6",
+    "fen": ""
+  },
+  {
+    "eco": "A58",
+    "name": "Benko Gambit Accepted: Central Storming Variation",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 b5 4. cxb5 a6 5. bxa6 g6 6. Nc3 Bxa6 7. f4",
+    "fen": ""
+  },
+  {
+    "eco": "A57",
+    "name": "Benko Gambit Accepted: Dlugy Variation",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 b5 4. cxb5 a6 5. f3",
+    "fen": ""
+  },
+  {
+    "eco": "A58",
+    "name": "Benko Gambit Accepted: Fianchetto Variation",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 b5 4. cxb5 a6 5. bxa6 g6 6. Nc3 Bxa6 7. g3 d6 8. Bg2 Bg7 9. Nf3",
+    "fen": ""
+  },
+  {
+    "eco": "A58",
+    "name": "Benko Gambit Accepted: Fully Accepted Variation",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 b5 4. cxb5 a6 5. bxa6",
+    "fen": ""
+  },
+  {
+    "eco": "A59",
+    "name": "Benko Gambit Accepted: King Walk Variation",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 b5 4. cxb5 a6 5. bxa6 g6 6. Nc3 Bxa6 7. Nf3 d6 8. e4 Bxf1 9. Kxf1 Bg7 10. g3 O-O 11. Kg2",
+    "fen": ""
+  },
+  {
+    "eco": "A57",
+    "name": "Benko Gambit Accepted: Modern Variation",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 b5 4. cxb5 a6 5. e3",
+    "fen": ""
+  },
+  {
+    "eco": "A57",
+    "name": "Benko Gambit Accepted: Pawn Return Variation",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 b5 4. cxb5 a6 5. b6",
+    "fen": ""
+  },
+  {
+    "eco": "A59",
+    "name": "Benko Gambit Accepted: Yugoslav",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 b5 4. cxb5 a6 5. bxa6 Bxa6 6. Nc3 d6 7. e4",
+    "fen": ""
+  },
+  {
+    "eco": "A59",
+    "name": "Benko Gambit Accepted: Yugoslav",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 b5 4. cxb5 a6 5. bxa6 g6 6. Nc3 Bxa6 7. e4 Bxf1 8. Kxf1 d6 9. Nge2",
+    "fen": ""
+  },
+  {
+    "eco": "A57",
+    "name": "Benko Gambit Declined: Bishop Attack",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 b5 4. Bg5",
+    "fen": ""
+  },
+  {
+    "eco": "A57",
+    "name": "Benko Gambit Declined: Hjørring Countergambit",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 b5 4. e4",
+    "fen": ""
+  },
+  {
+    "eco": "A57",
+    "name": "Benko Gambit Declined: Main Line",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 b5 4. Nf3",
+    "fen": ""
+  },
+  {
+    "eco": "A57",
+    "name": "Benko Gambit Declined: Pseudo-Sämisch",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 b5 4. f3",
+    "fen": ""
+  },
+  {
+    "eco": "A57",
+    "name": "Benko Gambit Declined: Quiet Line",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 b5 4. Nd2",
+    "fen": ""
+  },
+  {
+    "eco": "A57",
+    "name": "Benko Gambit Declined: Sosonko Variation",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 b5 4. a4",
+    "fen": ""
+  },
+  {
+    "eco": "A58",
+    "name": "Benko Gambit: Fianchetto Variation",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 b5 4. cxb5 a6 5. bxa6 Bxa6 6. Nc3 d6 7. Nf3 g6 8. g3",
+    "fen": ""
+  },
+  {
+    "eco": "A57",
+    "name": "Benko Gambit: Mutkin Countergambit",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 b5 4. g4",
+    "fen": ""
+  },
+  {
+    "eco": "A58",
+    "name": "Benko Gambit: Nd2 Variation",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 b5 4. cxb5 a6 5. bxa6 Bxa6 6. Nc3 d6 7. Nf3 g6 8. Nd2",
+    "fen": ""
+  },
+  {
+    "eco": "A57",
+    "name": "Benko Gambit: Nescafe Frappe Attack",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 b5 4. cxb5 a6 5. Nc3 axb5 6. e4 b4 7. Nb5 d6 8. Bc4",
+    "fen": ""
+  },
+  {
+    "eco": "A57",
+    "name": "Benko Gambit: Zaitsev System",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 b5 4. cxb5 a6 5. Nc3",
+    "fen": ""
+  },
+  {
+    "eco": "A57",
+    "name": "Benko Gambit: Zaitsev Variation, Nescafe Frappe Attack",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 b5 4. cxb5 a6 5. Nc3 axb5 6. e4 b4 7. Nb5",
+    "fen": ""
+  },
+  {
+    "eco": "A56",
+    "name": "Benoni Defense",
+    "moves": "1. d4 Nf6 2. c4 c5",
+    "fen": ""
+  },
+  {
+    "eco": "A61",
+    "name": "Benoni Defense",
+    "moves": "1. d4 Nf6 2. c4 e6 3. Nf3 c5 4. d5 exd5 5. cxd5 d6 6. Nc3 g6",
+    "fen": ""
+  },
+  {
+    "eco": "A43",
+    "name": "Benoni Defense: Benoni Gambit Accepted",
+    "moves": "1. d4 c5 2. dxc5",
+    "fen": ""
+  },
+  {
+    "eco": "A43",
+    "name": "Benoni Defense: Benoni Gambit, Schlenker Defense",
+    "moves": "1. d4 c5 2. dxc5 Na6",
+    "fen": ""
+  },
+  {
+    "eco": "A43",
+    "name": "Benoni Defense: Benoni-Indian Defense",
+    "moves": "1. d4 c5 2. d5 Nf6",
+    "fen": ""
+  },
+  {
+    "eco": "A43",
+    "name": "Benoni Defense: Benoni-Indian Defense, Kingside Move Order",
+    "moves": "1. d4 c5 2. d5 Nf6 3. Nf3",
+    "fen": ""
+  },
+  {
+    "eco": "A43",
+    "name": "Benoni Defense: Benoni-Staunton Gambit",
+    "moves": "1. d4 c5 2. d5 f5 3. e4",
+    "fen": ""
+  },
+  {
+    "eco": "A70",
+    "name": "Benoni Defense: Classical Variation",
+    "moves": "1. d4 Nf6 2. c4 e6 3. Nf3 c5 4. d5 exd5 5. cxd5 d6 6. Nc3 g6 7. e4",
+    "fen": ""
+  },
+  {
+    "eco": "A72",
+    "name": "Benoni Defense: Classical Variation",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. Nf3 Bg7 8. Be2 O-O",
+    "fen": ""
+  },
+  {
+    "eco": "A75",
+    "name": "Benoni Defense: Classical Variation, Argentine Counterattack",
+    "moves": "1. d4 Nf6 2. c4 e6 3. Nf3 c5 4. d5 exd5 5. cxd5 d6 6. Nc3 g6 7. e4 Bg7 8. Be2 O-O 9. O-O a6 10. a4 Bg4",
+    "fen": ""
+  },
+  {
+    "eco": "A71",
+    "name": "Benoni Defense: Classical Variation, Averbakh-Grivas Attack",
+    "moves": "1. d4 Nf6 2. c4 e6 3. Nf3 c5 4. d5 exd5 5. cxd5 d6 6. Nc3 g6 7. e4 Bg7 8. Bg5",
+    "fen": ""
+  },
+  {
+    "eco": "A76",
+    "name": "Benoni Defense: Classical Variation, Czerniak Defense",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. Nf3 Bg7 8. Be2 O-O 9. O-O Re8",
+    "fen": ""
+  },
+  {
+    "eco": "A78",
+    "name": "Benoni Defense: Classical Variation, Czerniak Defense",
+    "moves": "1. d4 Nf6 2. c4 e6 3. Nf3 c5 4. d5 exd5 5. cxd5 d6 6. Nc3 g6 7. e4 Bg7 8. Be2 O-O 9. O-O Re8 10. Nd2 Na6",
+    "fen": ""
+  },
+  {
+    "eco": "A79",
+    "name": "Benoni Defense: Classical Variation, Czerniak Defense",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. Nf3 Bg7 8. Be2 O-O 9. O-O Re8 10. Nd2 Na6 11. f3",
+    "fen": ""
+  },
+  {
+    "eco": "A77",
+    "name": "Benoni Defense: Classical Variation, Czerniak Defense, Tal Line",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. Nf3 Bg7 8. Be2 O-O 9. O-O Re8 10. Nd2",
+    "fen": ""
+  },
+  {
+    "eco": "A74",
+    "name": "Benoni Defense: Classical Variation, Full Line",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. Nf3 Bg7 8. Be2 O-O 9. O-O a6 10. a4",
+    "fen": ""
+  },
+  {
+    "eco": "A73",
+    "name": "Benoni Defense: Classical Variation, Main Line",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. Nf3 Bg7 8. Be2 O-O 9. O-O",
+    "fen": ""
+  },
+  {
+    "eco": "A70",
+    "name": "Benoni Defense: Classical Variation, New York Variation",
+    "moves": "1. d4 Nf6 2. c4 e6 3. Nf3 c5 4. d5 exd5 5. cxd5 d6 6. Nc3 g6 7. e4 Bg7 8. h3",
+    "fen": ""
+  },
+  {
+    "eco": "A70",
+    "name": "Benoni Defense: Classical Variation, Traditional Variation",
+    "moves": "1. d4 Nf6 2. c4 e6 3. Nf3 c5 4. d5 exd5 5. cxd5 d6 6. Nc3 g6 7. e4 Bg7 8. Be2",
+    "fen": ""
+  },
+  {
+    "eco": "A43",
+    "name": "Benoni Defense: Cormorant Gambit",
+    "moves": "1. d4 c5 2. dxc5 b6",
+    "fen": ""
+  },
+  {
+    "eco": "A56",
+    "name": "Benoni Defense: Czech Benoni Defense",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 e5",
+    "fen": ""
+  },
+  {
+    "eco": "A61",
+    "name": "Benoni Defense: Fianchetto Variation",
+    "moves": "1. d4 Nf6 2. c4 e6 3. Nf3 c5 4. d5 exd5 5. cxd5 d6 6. Nc3 g6 7. g3",
+    "fen": ""
+  },
+  {
+    "eco": "A62",
+    "name": "Benoni Defense: Fianchetto Variation",
+    "moves": "1. d4 Nf6 2. c4 e6 3. g3 c5 4. d5 exd5 5. cxd5 d6 6. Nc3 g6 7. Bg2 Bg7 8. Nf3 O-O",
+    "fen": ""
+  },
+  {
+    "eco": "A63",
+    "name": "Benoni Defense: Fianchetto Variation, Hastings Defense",
+    "moves": "1. d4 Nf6 2. c4 e6 3. g3 c5 4. d5 exd5 5. cxd5 d6 6. Nc3 g6 7. Bg2 Bg7 8. Nf3 O-O 9. O-O Nbd7",
+    "fen": ""
+  },
+  {
+    "eco": "A64",
+    "name": "Benoni Defense: Fianchetto Variation, Hastings Defense, Main Line",
+    "moves": "1. d4 Nf6 2. c4 e6 3. g3 c5 4. d5 exd5 5. cxd5 d6 6. Nc3 g6 7. Bg2 Bg7 8. Nf3 O-O 9. O-O a6 10. a4 Nbd7 11. Nd2 Re8",
+    "fen": ""
+  },
+  {
+    "eco": "A68",
+    "name": "Benoni Defense: Four Pawns Attack",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. f4 Bg7 8. Nf3 O-O",
+    "fen": ""
+  },
+  {
+    "eco": "A69",
+    "name": "Benoni Defense: Four Pawns Attack, Main Line",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. f4 Bg7 8. Nf3 O-O 9. Be2 Re8",
+    "fen": ""
+  },
+  {
+    "eco": "A40",
+    "name": "Benoni Defense: Franco-Sicilian Hybrid",
+    "moves": "1. d4 e6 2. c4 c5 3. d5 exd5 4. cxd5 d6 5. Nc3 g6 6. e4 Bg7 7. Nf3 Ne7",
+    "fen": ""
+  },
+  {
+    "eco": "A43",
+    "name": "Benoni Defense: French Benoni",
+    "moves": "1. e4 e6 2. d4 c5 3. d5",
+    "fen": ""
+  },
+  {
+    "eco": "A43",
+    "name": "Benoni Defense: Hawk Variation",
+    "moves": "1. d4 Nf6 2. Nf3 c5 3. d5 c4",
+    "fen": ""
+  },
+  {
+    "eco": "A56",
+    "name": "Benoni Defense: Hromádka System",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 d6",
+    "fen": ""
+  },
+  {
+    "eco": "A56",
+    "name": "Benoni Defense: King's Indian System",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 e5 4. Nc3 d6 5. e4 g6",
+    "fen": ""
+  },
+  {
+    "eco": "A65",
+    "name": "Benoni Defense: King's Pawn Line",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4",
+    "fen": ""
+  },
+  {
+    "eco": "A65",
+    "name": "Benoni Defense: King's Pawn Line",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. f3 Bg7",
+    "fen": ""
+  },
+  {
+    "eco": "A65",
+    "name": "Benoni Defense: King's Pawn Line",
+    "moves": "1. d4 Nf6 2. c4 g6 3. f3 c5 4. d5 d6 5. e4 Bg7 6. Nc3 e6 7. Be3 O-O 8. Qd2 exd5 9. cxd5",
+    "fen": ""
+  },
+  {
+    "eco": "A65",
+    "name": "Benoni Defense: King's Pawn Line, with Be3",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. f3 Bg7 8. Be3",
+    "fen": ""
+  },
+  {
+    "eco": "A65",
+    "name": "Benoni Defense: King's Pawn Line, with Bg5",
+    "moves": "1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. f3 O-O 6. Bg5 c5 7. d5",
+    "fen": ""
+  },
+  {
+    "eco": "A65",
+    "name": "Benoni Defense: King's Pawn Line, with Bg5",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. f3 Bg7 8. Bg5",
+    "fen": ""
+  },
+  {
+    "eco": "A65",
+    "name": "Benoni Defense: King's Pawn Line, with Bg5",
+    "moves": "1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. f3 O-O 6. Bg5 c5 7. d5 e6 8. Qd2 exd5 9. exd5",
+    "fen": ""
+  },
+  {
+    "eco": "A65",
+    "name": "Benoni Defense: King's Pawn Line, with Nge2",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. f3 Bg7 8. Nge2",
+    "fen": ""
+  },
+  {
+    "eco": "A65",
+    "name": "Benoni Defense: King's Pawn Line, with Nge2",
+    "moves": "1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. f3 O-O 6. Nge2 c5 7. d5 e6 8. Ng3 exd5 9. cxd5",
+    "fen": ""
+  },
+  {
+    "eco": "A61",
+    "name": "Benoni Defense: Knight's Tour Variation",
+    "moves": "1. d4 Nf6 2. c4 e6 3. Nf3 c5 4. d5 exd5 5. cxd5 d6 6. Nc3 g6 7. Nd2",
+    "fen": ""
+  },
+  {
+    "eco": "A66",
+    "name": "Benoni Defense: Mikenas Variation",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. f4 Bg7 8. e5",
+    "fen": ""
+  },
+  {
+    "eco": "A60",
+    "name": "Benoni Defense: Modern Variation",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 e6",
+    "fen": ""
+  },
+  {
+    "eco": "A60",
+    "name": "Benoni Defense: Modern Variation, Snake Variation",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 Bd6",
+    "fen": ""
+  },
+  {
+    "eco": "A43",
+    "name": "Benoni Defense: Old Benoni",
+    "moves": "1. d4 c5",
+    "fen": ""
+  },
+  {
+    "eco": "A43",
+    "name": "Benoni Defense: Old Benoni",
+    "moves": "1. d4 c5 2. d5",
+    "fen": ""
+  },
+  {
+    "eco": "A43",
+    "name": "Benoni Defense: Old Benoni",
+    "moves": "1. d4 c5 2. d5 d6",
+    "fen": ""
+  },
+  {
+    "eco": "A44",
+    "name": "Benoni Defense: Old Benoni",
+    "moves": "1. d4 c5 2. d5 e5",
+    "fen": ""
+  },
+  {
+    "eco": "A43",
+    "name": "Benoni Defense: Old Benoni, Mujannah Formation",
+    "moves": "1. d4 c5 2. d5 f5",
+    "fen": ""
+  },
+  {
+    "eco": "A43",
+    "name": "Benoni Defense: Old Benoni, Schmid Variation",
+    "moves": "1. d4 c5 2. d5 d6 3. Nc3 g6",
+    "fen": ""
+  },
+  {
+    "eco": "A66",
+    "name": "Benoni Defense: Pawn Storm Variation",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. f4",
+    "fen": ""
+  },
+  {
+    "eco": "A44",
+    "name": "Benoni Defense: Semi-Benoni",
+    "moves": "1. d4 c5 2. d5 e5 3. e4 d6",
+    "fen": ""
+  },
+  {
+    "eco": "A43",
+    "name": "Benoni Defense: Snail Variation",
+    "moves": "1. d4 c5 2. d5 Na6",
+    "fen": ""
+  },
+  {
+    "eco": "A67",
+    "name": "Benoni Defense: Taimanov Variation",
+    "moves": "1. d4 Nf6 2. c4 c5 3. d5 e6 4. Nc3 exd5 5. cxd5 d6 6. e4 g6 7. f4 Bg7 8. Bb5+",
+    "fen": ""
+  },
+  {
+    "eco": "A61",
+    "name": "Benoni Defense: Uhlmann Variation",
+    "moves": "1. d4 Nf6 2. c4 e6 3. Nf3 c5 4. d5 exd5 5. cxd5 d6 6. Nc3 g6 7. Bg5",
+    "fen": ""
+  },
+  {
+    "eco": "A56",
+    "name": "Benoni Defense: Weenink Variation",
+    "moves": "1. d4 Nf6 2. c4 c5 3. dxc5 e6",
+    "fen": ""
+  },
+  {
+    "eco": "A43",
+    "name": "Benoni Defense: Woozle",
+    "moves": "1. d4 c5 2. d5 Nf6 3. Nc3 Qa5",
+    "fen": ""
+  },
+  {
+    "eco": "A43",
+    "name": "Benoni Defense: Zilbermints-Benoni Gambit",
+    "moves": "1. d4 c5 2. b4",
+    "fen": ""
+  },
+  {
+    "eco": "A43",
+    "name": "Benoni Defense: Zilbermints-Benoni Gambit",
+    "moves": "1. d4 c5 2. Nf3 cxd4 3. b4",
+    "fen": ""
+  },
+  {
+    "eco": "A43",
+    "name": "Benoni Defense: Zilbermints-Benoni Gambit, Tamarkin Countergambit",
+    "moves": "1. d4 c5 2. Nf3 cxd4 3. b4 e5",
+    "fen": ""
+  },
+  {
+    "eco": "A02",
+    "name": "Bird Opening",
+    "moves": "1. f4",
+    "fen": ""
+  },
+  {
+    "eco": "A02",
+    "name": "Bird Opening: Batavo-Polish Attack",
+    "moves": "1. f4 Nf6 2. Nf3 g6 3. b4",
+    "fen": ""
   }
-]
+    ]
