@@ -911,101 +911,34 @@
         </div>
     </div>
     
-    <!-- Bottom Sheet: سجل تتبع الافتتاحيات -->
+    <!-- Console الموقع -->
     <div class="bottom-sheet-overlay" id="opening-log-overlay"></div>
     <div class="bottom-sheet" id="opening-log-sheet">
-        <div class="p-6">
-            <div class="w-12 h-1 rounded-full mx-auto mb-6" style="background: var(--text-secondary);"></div>
-            
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold flex items-center gap-2">
-                    <i data-lucide="activity" class="w-6 h-6" style="color: var(--accent-cyan);"></i>
-                    سجل تتبع الافتتاحيات
+        <div class="p-4">
+            <div class="w-12 h-1 rounded-full mx-auto mb-4" style="background: var(--text-secondary);"></div>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold flex items-center gap-2">
+                    <i data-lucide="terminal" class="w-5 h-5" style="color: var(--accent-cyan);"></i>
+                    Console
                 </h2>
-                <button id="close-opening-log-btn" class="text-slate-400 hover:text-white">
-                    <i data-lucide="x" class="w-6 h-6"></i>
-                </button>
-            </div>
-            
-            <!-- الإحصائيات الإجمالية -->
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <div class="p-4 rounded-lg" style="background: var(--bg-tertiary);">
-                    <div class="text-sm" style="color: var(--text-secondary);">آخر محاولة</div>
-                    <div class="text-lg font-bold mt-1" id="last-detection-time">--</div>
-                </div>
-                <div class="p-4 rounded-lg" style="background: var(--bg-tertiary);">
-                    <div class="text-sm" style="color: var(--text-secondary);">عدد المحاولات</div>
-                    <div class="text-lg font-bold mt-1" id="total-attempts">0</div>
+                <div class="flex items-center gap-3">
+                    <button id="clear-console-btn" class="text-xs px-3 py-1 rounded" style="background:var(--bg-tertiary); color:var(--text-secondary);">مسح</button>
+                    <button id="close-opening-log-btn" class="text-slate-400 hover:text-white">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
                 </div>
             </div>
-            
-            <!-- إحصائيات كل مصدر -->
-            <div class="mb-6">
-                <h3 class="font-semibold mb-3" style="color: var(--text-secondary);">معدل النجاح لكل مصدر</h3>
-                <div class="space-y-3">
-                    <div class="p-3 rounded-lg" style="background: var(--bg-tertiary);">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="flex items-center gap-2">
-                                <span>🌐</span>
-                                <span class="font-semibold">Lichess Cloud API</span>
-                            </span>
-                            <span id="lichess-cloud-rate" class="font-bold" style="color: var(--accent-green);">--</span>
-                        </div>
-                        <div class="flex gap-4 text-sm" style="color: var(--text-secondary);">
-                            <span>✅ <span id="lichess-cloud-success">0</span></span>
-                            <span>❌ <span id="lichess-cloud-failed">0</span></span>
-                        </div>
-                    </div>
-                    
-                    <div class="p-3 rounded-lg" style="background: var(--bg-tertiary);">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="flex items-center gap-2">
-                                <span>📖</span>
-                                <span class="font-semibold">Lichess TSV Database</span>
-                            </span>
-                            <span id="lichess-tsv-rate" class="font-bold" style="color: var(--accent-green);">--</span>
-                        </div>
-                        <div class="flex gap-4 text-sm" style="color: var(--text-secondary);">
-                            <span>✅ <span id="lichess-tsv-success">0</span></span>
-                            <span>❌ <span id="lichess-tsv-failed">0</span></span>
-                        </div>
-                    </div>
-                    
-                    <div class="p-3 rounded-lg" style="background: var(--bg-tertiary);">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="flex items-center gap-2">
-                                <span>📚</span>
-                                <span class="font-semibold">GitHub Database</span>
-                            </span>
-                            <span id="github-rate" class="font-bold" style="color: var(--accent-green);">--</span>
-                        </div>
-                        <div class="flex gap-4 text-sm" style="color: var(--text-secondary);">
-                            <span>✅ <span id="github-success">0</span></span>
-                            <span>❌ <span id="github-failed">0</span></span>
-                        </div>
-                    </div>
-                    
-                    <div class="p-3 rounded-lg" style="background: var(--bg-tertiary);">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="flex items-center gap-2">
-                                <span>💾</span>
-                                <span class="font-semibold">Local Database</span>
-                            </span>
-                            <span id="local-rate" class="font-bold" style="color: var(--accent-green);">--</span>
-                        </div>
-                        <div class="flex gap-4 text-sm" style="color: var(--text-secondary);">
-                            <span>✅ <span id="local-success">0</span></span>
-                            <span>❌ <span id="local-failed">0</span></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- سجل المحاولات التفصيلي -->
-            <div>
-                <h3 class="font-semibold mb-3" style="color: var(--text-secondary);">سجل المحاولات</h3>
-                <div id="opening-log-details" class="space-y-2" style="max-height: 300px; overflow-y: auto;"></div>
-            </div>
+            <div id="site-console" style="
+                background: #0d1117;
+                border-radius: 8px;
+                padding: 12px;
+                font-family: monospace;
+                font-size: 12px;
+                line-height: 1.6;
+                max-height: 65vh;
+                overflow-y: auto;
+                color: #e6edf3;
+            "></div>
         </div>
     </div>
     
@@ -1195,46 +1128,7 @@
             }
         };
         
-        function logDetectionAttempt(source, status, message, data = null) {
-            const timestamp = new Date().toLocaleTimeString('ar-DZ');
-            const entry = {
-                timestamp,
-                source,
-                status, // 'trying', 'success', 'failed'
-                message,
-                data
-            };
-            
-            openingDetectionLog.attempts.push(entry);
-            
-            // تحديث الإحصائيات
-            if (status === 'success') {
-                openingDetectionLog.statistics[source].success++;
-            } else if (status === 'failed') {
-                openingDetectionLog.statistics[source].failed++;
-            }
-            
-            // عرض في Console
-            const icons = {
-                trying: '🔍',
-                success: '✅',
-                failed: '❌'
-            };
-            
-            const colors = {
-                trying: 'color: #60a5fa',
-                success: 'color: #4ade80',
-                failed: 'color: #ef4444'
-            };
-            
-            console.log(`%c${icons[status]} [${timestamp}] ${source.toUpperCase()}: ${message}`, colors[status]);
-            
-            if (data) {
-                console.log('   Data:', data);
-            }
-        }
-        
-        // قاعدة بيانات محلية كاحتياط (Fallback)
+
         function detectOpeningLocal(moves) {
             if (!moves || moves.length < 1) return null;
             
@@ -1261,7 +1155,6 @@
         }
         
         // ==================== وضع التحليل السحابي (اختياري) ====================
-        let useCloudDetection = false;
         
         // ==================== ECO Database (من النظام القديم) ====================
         let ecoDatabase = null;
@@ -1318,447 +1211,28 @@
         }
         
         // ==================== Lichess Explorer API (من النظام القديم) ====================
-        async function detectOpeningFromLichessExplorer(moves) {
-            if (!moves || moves.length < 1) return null;
-            try {
-                const tempChess = new Chess();
-                let lastValidPosition = null;
-                for (let i = 0; i < Math.min(moves.length, 15); i++) {
-                    const move = moves[i];
-                    tempChess.move(move);
-                    const fen = tempChess.fen();
-                    const response = await fetch(
-                        `https://explorer.lichess.org/lichess?variant=standard&speeds=blitz,rapid,classical&ratings=2000,2200,2500&fen=${encodeURIComponent(fen)}`,
-                        { method: 'GET', headers: { 'Accept': 'application/json' } }
-                    );
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.opening) {
-                            lastValidPosition = {
-                                name: data.opening.name || 'Unknown Opening',
-                                eco: data.opening.eco || '',
-                                fen: fen,
-                                length: i + 1,
-                                source: 'lichess'
-                            };
-                        } else if (lastValidPosition) {
-                            break;
-                        }
-                    } else {
-                        break;
-                    }
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                }
-                if (lastValidPosition) {
-                    const movesText = moves.slice(0, lastValidPosition.length).map(m => m.san).join(' ');
-                    const result = { ...lastValidPosition, moves: movesText };
-                    showToast(`✅ افتتاحية من Lichess: ${result.name}`, 2000);
-                    return result;
-                }
-            } catch (error) {
-                console.error('❌ Lichess Opening API failed:', error);
-            }
-            return null;
-        }
 
-        // Lichess TSV Files Cache
-        let lichessTSVCache = {};
-        
-        // تحميل ملف TSV من Lichess
-        async function loadLichessTSV(ecoPrefix) {
-            // إذا محمّل سابقاً
-            if (lichessTSVCache[ecoPrefix]) {
-                return lichessTSVCache[ecoPrefix];
-            }
-            
-            try {
-                const url = `https://raw.githubusercontent.com/lichess-org/chess-openings/master/${ecoPrefix}.tsv`;
-                logDetectionAttempt('lichessTSV', 'trying', `Loading ${ecoPrefix}.tsv...`);
-                
-                const response = await fetch(url);
-                
-                if (!response.ok) {
-                    logDetectionAttempt('lichessTSV', 'failed', `Failed to load ${ecoPrefix}.tsv (Status: ${response.status})`);
-                    return null;
-                }
-                
-                const text = await response.text();
-                const lines = text.split('\n').slice(1); // تخطي header
-                
-                const openings = [];
-                for (const line of lines) {
-                    if (!line.trim()) continue;
-                    
-                    const parts = line.split('\t');
-                    if (parts.length >= 4) {
-                        openings.push({
-                            eco: parts[0],
-                            name: parts[1],
-                            pgn: parts[2],
-                            uci: parts[3],
-                            epd: parts[4] || ''
-                        });
-                    }
-                }
-                
-                lichessTSVCache[ecoPrefix] = openings;
-                logDetectionAttempt('lichessTSV', 'success', `Loaded ${openings.length} openings from ${ecoPrefix}.tsv`);
-                return openings;
-                
-            } catch (error) {
-                logDetectionAttempt('lichessTSV', 'failed', `Error loading ${ecoPrefix}.tsv: ${error.message}`);
-                return null;
-            }
-        }
-        
-        // البحث في Lichess TSV
-        async function detectOpeningFromLichessTSV(moves) {
-            if (!moves || moves.length < 1) return null;
-            
-            try {
-                logDetectionAttempt('lichessTSV', 'trying', 'Searching Lichess TSV database...');
-                
-                const tempChess = new Chess();
-                let bestMatch = null;
-                
-                // جرب من الأطول للأقصر
-                for (let i = Math.min(moves.length, 20); i >= 1; i--) {
-                    tempChess.reset();
-                    
-                    let valid = true;
-                    for (let j = 0; j < i; j++) {
-                        try {
-                            tempChess.move(moves[j]);
-                        } catch {
-                            valid = false;
-                            break;
-                        }
-                    }
-                    
-                    if (!valid) continue;
-                    
-                    const fen = tempChess.fen();
-                    const movesStr = moves.slice(0, i).map(m => m.san).join(' ');
-                    
-                    // جرب جميع ملفات TSV المحتملة (A-E شائعة)
-                    const commonPrefixes = ['a', 'b', 'c', 'd', 'e'];
-                    
-                    for (const prefix of commonPrefixes) {
-                        const openings = await loadLichessTSV(prefix);
-                        if (!openings) continue;
-                        
-                        // البحث بالـ PGN
-                        const match = openings.find(entry => {
-                            return entry.pgn === movesStr || entry.epd === fen;
-                        });
-                        
-                        if (match) {
-                            bestMatch = {
-                                name: match.name,
-                                eco: match.eco,
-                                moves: movesStr,
-                                length: i,
-                                source: 'lichessTSV'
-                            };
-                            break;
-                        }
-                    }
-                    
-                    if (bestMatch) break;
-                }
-                
-                if (bestMatch) {
-                    logDetectionAttempt('lichessTSV', 'success', `Found: ${bestMatch.name} (${bestMatch.eco})`, bestMatch);
-                    showToast(`📖 ${bestMatch.name} (${bestMatch.eco})`, 3000);
-                    return bestMatch;
-                }
-                
-                logDetectionAttempt('lichessTSV', 'failed', 'No match found in Lichess TSV');
-                
-            } catch (error) {
-                logDetectionAttempt('lichessTSV', 'failed', `Error: ${error.message}`);
-            }
-            
-            return null;
-        }
-        
-        // استخدام Lichess Cloud API (الطريقة المثلى - مثل app-old.js)
-        async function detectOpeningFromLichessCloud(moves) {
-            if (!moves || moves.length < 1) return null;
-            
-            try {
-                logDetectionAttempt('lichessCloud', 'trying', 'Using Lichess Cloud API...');
-                
-                const tempChess = new Chess();
-                let lastValidOpening = null;
-                let bookMoveCount = 0;
-                
-                // جرب حتى 20 نقلة أو حتى نخرج من نطاق الافتتاحية
-                for (let i = 0; i < Math.min(moves.length, 20); i++) {
-                    try {
-                        tempChess.move(moves[i]);
-                    } catch {
-                        break;
-                    }
-                    
-                    const fen = tempChess.fen();
-                    
-                    try {
-                        // Lichess Cloud Eval API
-                        const response = await fetch(
-                            `https://lichess.org/api/cloud-eval?fen=${encodeURIComponent(fen)}&multiPv=1&variant=standard`,
-                            {
-                                method: 'GET',
-                                headers: { 'Accept': 'application/json' }
-                            }
-                        );
-                        
-                        if (response.ok) {
-                            const data = await response.json();
-                            
-                            // تحقق من وجود PVs (يعني الموقف معروف في قاعدة البيانات)
-                            if (data.pvs && data.pvs.length > 0) {
-                                bookMoveCount = i + 1;
-                                
-                                // جرب الحصول على اسم الافتتاحية من Explorer API
-                                try {
-                                    const explorerResponse = await fetch(
-                                        `https://explorer.lichess.org/lichess?fen=${encodeURIComponent(fen)}&speeds=blitz,rapid,classical&ratings=2000,2200,2500`,
-                                        {
-                                            method: 'GET',
-                                            headers: { 'Accept': 'application/json' }
-                                        }
-                                    );
-                                    
-                                    if (explorerResponse.ok) {
-                                        const explorerData = await explorerResponse.json();
-                                        
-                                        if (explorerData.opening) {
-                                            lastValidOpening = {
-                                                name: explorerData.opening.name,
-                                                eco: explorerData.opening.eco || '',
-                                                length: i + 1,
-                                                source: 'lichessCloud'
-                                            };
-                                        }
-                                    }
-                                    
-                                    // تأخير صغير لتجنب Rate limiting
-                                    await new Promise(resolve => setTimeout(resolve, 150));
-                                    
-                                } catch (explorerError) {
-                                    logDetectionAttempt('lichessCloud', 'trying', `Explorer API failed at move ${i + 1}`);
-                                }
-                            } else {
-                                // لا توجد PVs = خرجنا من نطاق Book moves
-                                break;
-                            }
-                        } else {
-                            // 404 = الموقف غير موجود في قاعدة البيانات = خرجنا من نطاق الافتتاحية
-                            if (response.status === 404) {
-                                break;
-                            }
-                            logDetectionAttempt('lichessCloud', 'trying', `Cloud API returned status: ${response.status}`);
-                            // تجاهل الأخطاء الأخرى والاستمرار
-                            continue;
-                        }
-                        
-                        // تأخير بين الطلبات
-                        await new Promise(resolve => setTimeout(resolve, 150));
-                        
-                    } catch (fetchError) {
-                        logDetectionAttempt('lichessCloud', 'trying', `Fetch error at move ${i + 1}: ${fetchError.message}`);
-                        // عند خطأ الشبكة نوقف المحاولة
-                        break;
-                    }
-                }
-                
-                if (lastValidOpening) {
-                    const movesText = moves.slice(0, lastValidOpening.length).map(m => m.san).join(' ');
-                    const result = {
-                        ...lastValidOpening,
-                        moves: movesText,
-                        bookMoveCount: bookMoveCount
-                    };
-                    
-                    logDetectionAttempt('lichessCloud', 'success', `Found: ${result.name} (${result.eco}) with ${bookMoveCount} book moves`, result);
-                    showToast(`✅ ${result.name} (${result.eco}) 🌐`, 3000);
-                    return result;
-                }
-                
-                // إذا لم نجد اسم افتتاحية لكن وجدنا Book moves
-                if (bookMoveCount > 0) {
-                    const result = {
-                        name: 'Opening Theory',
-                        eco: '',
-                        moves: moves.slice(0, bookMoveCount).map(m => m.san).join(' '),
-                        length: bookMoveCount,
-                        bookMoveCount: bookMoveCount,
-                        source: 'lichessCloud'
-                    };
-                    
-                    logDetectionAttempt('lichessCloud', 'success', `Found ${bookMoveCount} book moves (no specific name)`, result);
-                    return result;
-                }
-                
-                logDetectionAttempt('lichessCloud', 'failed', 'No opening found in Lichess Cloud');
-                
-            } catch (error) {
-                logDetectionAttempt('lichessCloud', 'failed', `Error: ${error.message}`);
-            }
-            
-            return null;
-        }
-        
-        // استخدام GitHub hosted openings (خطة احتياطية)
-        let githubOpeningsCache = null;
-        
-        async function loadGitHubOpenings() {
-            if (githubOpeningsCache) return githubOpeningsCache;
-            
-            try {
-                logDetectionAttempt('github', 'trying', 'Loading openings from GitHub...');
-                const response = await fetch('https://stop7orgo.github.io/chess-openings/openings.json');
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    githubOpeningsCache = data;
-                    logDetectionAttempt('github', 'success', `Loaded ${data.length} entries from GitHub`);
-                    return data;
-                } else {
-                    logDetectionAttempt('github', 'failed', `Failed to load GitHub openings (Status: ${response.status})`);
-                }
-            } catch (error) {
-                logDetectionAttempt('github', 'failed', `Error loading GitHub openings: ${error.message}`);
-            }
-            
-            return null;
-        }
-        
-        async function detectOpeningFromGitHub(moves) {
-            if (!moves || moves.length < 1) return null;
-            
-            try {
-                const openings = await loadGitHubOpenings();
-                if (!openings) return null;
-                
-                logDetectionAttempt('github', 'trying', 'Searching GitHub openings database...');
-                
-                const tempChess = new Chess();
-                let bestMatch = null;
-                
-                // جرب من الأطول للأقصر
-                for (let i = Math.min(moves.length, 15); i >= 1; i--) {
-                    tempChess.reset();
-                    
-                    let valid = true;
-                    for (let j = 0; j < i; j++) {
-                        try {
-                            tempChess.move(moves[j]);
-                        } catch {
-                            valid = false;
-                            break;
-                        }
-                    }
-                    
-                    if (!valid) continue;
-                    
-                    const fen = tempChess.fen();
-                    
-                    // البحث في قاعدة البيانات
-                    const match = openings.find(entry => entry.fen === fen);
-                    
-                    if (match) {
-                        bestMatch = {
-                            name: match.name,
-                            eco: match.eco,
-                            moves: moves.slice(0, i).map(m => m.san).join(' '),
-                            length: i,
-                            source: 'github'
-                        };
-                        break;
-                    }
-                }
-                
-                if (bestMatch) {
-                    logDetectionAttempt('github', 'success', `Found: ${bestMatch.name} (${bestMatch.eco})`, bestMatch);
-                    showToast(`📖 ${bestMatch.name} (${bestMatch.eco})`, 3000);
-                    return bestMatch;
-                }
-                
-                logDetectionAttempt('github', 'failed', 'No match found in GitHub database');
-                
-            } catch (error) {
-                logDetectionAttempt('github', 'failed', `Error: ${error.message}`);
-            }
-            
-            return null;
-        }
-        
-        // الدالة الرئيسية للتعرف على الافتتاحيات (4 طبقات)
+
         async function detectOpening(moves) {
-            // إعادة تعيين سجل المحاولة
-            openingDetectionLog.attempts = [];
-            openingDetectionLog.lastDetection = new Date();
-            
-            console.log('%c🔍 ===== Starting Opening Detection =====', 'color: #fbbf24; font-weight: bold; font-size: 14px');
-            
-            // ==================== وضع التحليل السحابي المتقدم (اختياري) ====================
-            if (useCloudDetection) {
-                // 1. محاولة Lichess Cloud
-                const lichessCloudResult = await detectOpeningFromLichessCloud(moves);
-                if (lichessCloudResult) {
-                    console.log('%c✅ ===== Detection Complete (Cloud) =====', 'color: #4ade80; font-weight: bold; font-size: 14px');
-                    updateLogBadge();
-                    return lichessCloudResult;
-                }
-                
-                // 2. محاولة Lichess TSV
-                const lichessTSVResult = await detectOpeningFromLichessTSV(moves);
-                if (lichessTSVResult) {
-                    console.log('%c✅ ===== Detection Complete (Cloud) =====', 'color: #4ade80; font-weight: bold; font-size: 14px');
-                    updateLogBadge();
-                    return lichessTSVResult;
-                }
-                
-                // 3. محاولة GitHub hosted openings
-                const githubResult = await detectOpeningFromGitHub(moves);
-                if (githubResult) {
-                    console.log('%c✅ ===== Detection Complete (Cloud) =====', 'color: #4ade80; font-weight: bold; font-size: 14px');
-                    updateLogBadge();
-                    return githubResult;
-                }
-            }
-            
-            // ==================== التحليل الأساسي (النظام الرئيسي) ====================
-            // 1. محاولة Lichess Explorer API
-            const lichessResult = await detectOpeningFromLichessExplorer(moves);
-            if (lichessResult) {
-                console.log('%c✅ ===== Detection Complete =====', 'color: #4ade80; font-weight: bold; font-size: 14px');
-                updateLogBadge();
-                return lichessResult;
-            }
-            
-            // 2. محاولة ECO.json (قاعدة بيانات شاملة)
-            const ecoResult = await detectOpeningFromECO(moves);
-            if (ecoResult) {
-                console.log('%c✅ ===== Detection Complete =====', 'color: #4ade80; font-weight: bold; font-size: 14px');
-                updateLogBadge();
-                return ecoResult;
-            }
-            
-            // 3. الرجوع لقاعدة البيانات المحلية كاحتياط أخير
+            appLog('🔍 بدء كشف الافتتاحية...');
+
+            // 1. قاعدة البيانات المحلية المدمجة (openingsDatabase)
             const localResult = detectOpeningLocal(moves);
             if (localResult) {
-                console.log('%c✅ ===== Detection Complete =====', 'color: #4ade80; font-weight: bold; font-size: 14px');
-                showToast(`📚 افتتاحية من القاعدة المحلية: ${localResult.name}`, 2000);
+                appLog(`✅ الافتتاحية: ${localResult.name} (${localResult.eco}) - محلي`);
                 updateLogBadge();
                 return localResult;
             }
-            
-            // 4. لم يتم العثور على افتتاحية
-            console.log('%c❌ ===== Detection Failed =====', 'color: #ef4444; font-weight: bold; font-size: 14px');
-            showToast('❌ لم يتم التعرف على الافتتاحية', 2000);
+
+            // 2. ECO.json (قاعدة أكبر)
+            const ecoResult = await detectOpeningFromECO(moves);
+            if (ecoResult) {
+                appLog(`✅ الافتتاحية: ${ecoResult.name} (${ecoResult.eco}) - ECO`);
+                updateLogBadge();
+                return ecoResult;
+            }
+
+            appLog('❌ لم يتم التعرف على الافتتاحية');
             updateLogBadge();
             return null;
         }
@@ -1797,28 +1271,34 @@
         
         // ==================== Toast ====================
         // ==================== تبديل وضع التحليل السحابي ====================
-        function toggleCloudDetection() {
-            useCloudDetection = !useCloudDetection;
-            const track = document.getElementById('cloud-toggle-track');
-            const thumb = document.getElementById('cloud-toggle-thumb');
-            const label = document.getElementById('cloud-toggle-label');
-            if (useCloudDetection) {
-                track.style.background = 'var(--accent-cyan)';
-                thumb.style.left = '19px';
-                thumb.style.background = 'white';
-                label.textContent = 'مفعّل';
-                label.style.color = 'var(--accent-cyan)';
-                showToast('☁️ التحليل السحابي المتقدم مفعّل', 2000);
-            } else {
-                track.style.background = 'var(--bg-tertiary)';
-                thumb.style.left = '3px';
-                thumb.style.background = 'var(--text-secondary)';
-                label.textContent = 'معطّل';
-                label.style.color = 'var(--text-secondary)';
-                showToast('🔌 التحليل السحابي المتقدم معطّل', 2000);
-            }
-        }
+
         
+
+        // ==================== Site Console ====================
+        const _consoleLogs = [];
+        function appLog(msg, type = 'info') {
+            const time = new Date().toLocaleTimeString('en', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
+            const colors = { info: '#58a6ff', success: '#3fb950', warn: '#d29922', error: '#f85149', engine: '#bc8cff' };
+            const icons  = { info: '▶', success: '✅', warn: '⚠️', error: '❌', engine: '♟️' };
+            const entry = { time, msg, type };
+            _consoleLogs.push(entry);
+            if (_consoleLogs.length > 200) _consoleLogs.shift();
+            // اكتب في console المتصفح أيضاً
+            const style = `color:${colors[type]||colors.info}`;
+            console.log(`%c[${time}] ${icons[type]||'▶'} ${msg}`, style);
+            // حدّث الـ UI إذا كان مفتوحاً
+            _renderConsole();
+        }
+        function _renderConsole() {
+            const el = document.getElementById('site-console');
+            if (!el) return;
+            const colors = { info: '#58a6ff', success: '#3fb950', warn: '#d29922', error: '#f85149', engine: '#bc8cff' };
+            el.innerHTML = _consoleLogs.map(e =>
+                `<div><span style="color:#6e7681">[${e.time}]</span> <span style="color:${colors[e.type]||colors.info}">${e.msg}</span></div>`
+            ).join('');
+            el.scrollTop = el.scrollHeight;
+        }
+
         function showToast(message, duration = 3000) {
             const toast = document.createElement('div');
             toast.className = 'toast';
@@ -1859,7 +1339,7 @@
                 const statsRes = await fetch(`https://api.chess.com/pub/player/${username}/stats`);
                 
                 if (!statsRes.ok) {
-                    console.warn('⚠️ Stats not available, continuing without them');
+                    appLog('⚠️ تحذير', 'warn');
                 }
                 
                 const stats = statsRes.ok ? await statsRes.json() : {};
@@ -1928,7 +1408,7 @@
                 const gamesData = await gamesRes.json();
                 
                 if (!gamesData.games || gamesData.games.length === 0) {
-                    console.warn('⚠️ Archive is empty, trying next...');
+                    appLog('⚠️ تحذير', 'warn');
                     sessionData.archiveIndex++;
                     showLoading(false);
                     return loadMoreGames(); // Try next archive
@@ -2129,7 +1609,7 @@
                 }
             } catch (error) {
                 // في حالة الخطأ، تبقى الصورة الافتراضية
-                console.warn('Failed to load avatar for', username);
+                appLog('⚠️ تحذير', 'warn');
             }
         }
         
@@ -2319,25 +1799,27 @@
         // ==================== Stockfish ====================
         async function tryStockfishAnalysis() {
             const engines = [
-                // Stockfish 18 عبر wrapper (يحمل stockfish-18-lite.js + stockfish.wasm)
-                { url: 'stockfish-worker.js', label: 'Stockfish 18 ⚡' },
-                // Stockfish 10 asm.js - احتياطي لا يحتاج wasm
+                // Stockfish 18 lite-single من CDN - single-threaded، لا يحتاج headers خاصة
+                { url: 'https://cdn.jsdelivr.net/gh/nmrugg/stockfish.js@v18.0.0/stockfish-18-lite-single.js', label: 'Stockfish 18 ⚡' },
+                // lite عادي كاحتياطي ثانٍ
+                { url: 'https://cdn.jsdelivr.net/gh/nmrugg/stockfish.js@v18.0.0/stockfish-18-lite.js', label: 'Stockfish 18' },
+                // المحلي القديم دائماً آخر احتياطي
                 { url: 'stockfish.js', label: 'Stockfish 10' },
-                // CDN احتياطي أخير
-                { url: 'https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js', label: 'Stockfish CDN' },
             ];
 
             for (const eng of engines) {
-                document.getElementById('engine-status').textContent = `⏳ ${eng.label}...`;
+                document.getElementById('engine-status').textContent = `⏳ تحميل ${eng.label}...`;
+                appLog(`⏳ جاري تحميل ${eng.label}...`, 'engine');
                 const worker = await testWorker(eng.url);
                 if (worker) {
-                    console.log('✅ Engine:', eng.label);
+                    appLog(`✅ محرك نشط: ${eng.label}`, 'engine');
                     return await runAnalysisWorker(worker, eng.label);
                 }
-                console.log('❌ Failed:', eng.url);
+                appLog(`❌ فشل: ${eng.label}`, 'warn');
             }
 
             document.getElementById('engine-status').textContent = '❌ Stockfish غير متاح';
+            appLog('❌ فشل تحميل جميع المحركات', 'error');
             return false;
         }
 
@@ -2389,6 +1871,7 @@
                         stockfish.removeEventListener('message', onMsg);
                         stockfish.terminate();
                         document.getElementById('engine-status').textContent = `اكتمل - ${engineLabel}`;
+                        appLog(`✅ التحليل اكتمل - ${engineLabel}`, 'success');
                         resolve(true); return;
                     }
                     analyzing = true;
@@ -2406,6 +1889,7 @@
                         stockfish.removeEventListener('message', onMsg);
                         stockfish.terminate();
                         document.getElementById('engine-status').textContent = `⚠️ ${engineLabel} - انتهى الوقت`;
+                        appLog(`⚠️ انتهى وقت التحليل - ${engineLabel}`, 'warn');
                         resolve(idx > 0);
                     }
                 }, 180000);
@@ -3176,15 +2660,12 @@
         
         // تحديث badge العداد
         function updateLogBadge() {
-            const badge = document.getElementById('log-badge');
             const btn = document.getElementById('opening-log-btn');
-            const count = openingDetectionLog.attempts.length;
-            
-            if (count > 0) {
-                badge.textContent = count;
-                badge.style.display = 'flex';
-                btn.style.display = 'inline-flex';
-            }
+            if (!btn) return;
+            const count = _consoleLogs.length;
+            btn.style.display = count > 0 ? 'flex' : 'none';
+            const badge = btn.querySelector('.log-badge');
+            if (badge) badge.textContent = count > 99 ? '99+' : count;
         }
         
         // ==================== مكتبة الافتتاحيات ====================
@@ -3513,6 +2994,12 @@
         // ==================== تهيئة ====================
         lucide.createIcons();
         
+        // ربط زر مسح Console
+        document.getElementById('clear-console-btn')?.addEventListener('click', () => {
+            _consoleLogs.length = 0;
+            _renderConsole();
+        });
+
         // استرجاع الجلسة عند التحميل
         window.addEventListener('load', async () => {
             await loadSession();
