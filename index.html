@@ -784,6 +784,27 @@
                             <div id="analysis-progress" class="progress-bar mt-2 hidden">
                                 <div id="analysis-progress-fill" class="progress-bar-fill" style="width: 0%"></div>
                             </div>
+                            <div id="cloud-toggle-row" class="mt-2 flex items-center justify-center gap-2" style="cursor: pointer; user-select: none;">
+                                <span style="font-size: 0.78rem; color: var(--text-secondary);">التحليل السحابي المتقدم</span>
+                                <div id="cloud-toggle-wrap" style="
+                                    position: relative; display: inline-block;
+                                    width: 36px; height: 20px;
+                                    flex-shrink: 0;
+                                ">
+                                    <div id="cloud-toggle-track" style="
+                                        width: 36px; height: 20px; border-radius: 10px;
+                                        background: var(--bg-tertiary); border: 1px solid rgba(255,255,255,0.15);
+                                        transition: background 0.25s;
+                                    "></div>
+                                    <div id="cloud-toggle-thumb" style="
+                                        position: absolute; top: 3px; left: 3px;
+                                        width: 14px; height: 14px; border-radius: 50%;
+                                        background: var(--text-secondary);
+                                        transition: left 0.25s, background 0.25s;
+                                    "></div>
+                                </div>
+                                <span id="cloud-toggle-label" style="font-size:0.72rem; color: var(--text-secondary);">معطّل</span>
+                            </div>
                         </div>
                     </div>
                     
@@ -1226,6 +1247,107 @@
             return null;
         }
         
+        // ==================== وضع التحليل السحابي (اختياري) ====================
+        let useCloudDetection = false;
+        
+        // ==================== ECO Database (من النظام القديم) ====================
+        let ecoDatabase = null;
+        
+        async function loadECODatabase() {
+            if (ecoDatabase) return ecoDatabase;
+            try {
+                const response = await fetch('https://cdn.jsdelivr.net/npm/@chess-openings/eco.json@1.0.0/eco.json');
+                if (response.ok) {
+                    ecoDatabase = await response.json();
+                    return ecoDatabase;
+                }
+            } catch (error) {
+                console.error('❌ Failed to load ECO database:', error);
+            }
+            return null;
+        }
+        
+        async function detectOpeningFromECO(moves) {
+            if (!moves || moves.length < 1) return null;
+            try {
+                const eco = await loadECODatabase();
+                if (!eco) return null;
+                const tempChess = new Chess();
+                let bestMatch = null;
+                for (let i = Math.min(moves.length, 20); i >= 1; i--) {
+                    tempChess.reset();
+                    let valid = true;
+                    for (let j = 0; j < i; j++) {
+                        try { tempChess.move(moves[j]); } catch { valid = false; break; }
+                    }
+                    if (!valid) continue;
+                    const fen = tempChess.fen();
+                    const match = eco.find(entry => entry.fen === fen);
+                    if (match) {
+                        bestMatch = {
+                            name: match.name,
+                            eco: match.eco,
+                            moves: moves.slice(0, i).map(m => m.san).join(' '),
+                            length: i,
+                            source: 'eco.json'
+                        };
+                        break;
+                    }
+                }
+                if (bestMatch) {
+                    showToast(`📖 افتتاحية من ECO: ${bestMatch.name}`, 2000);
+                    return bestMatch;
+                }
+            } catch (error) {
+                console.error('❌ ECO.json detection failed:', error);
+            }
+            return null;
+        }
+        
+        // ==================== Lichess Explorer API (من النظام القديم) ====================
+        async function detectOpeningFromLichessExplorer(moves) {
+            if (!moves || moves.length < 1) return null;
+            try {
+                const tempChess = new Chess();
+                let lastValidPosition = null;
+                for (let i = 0; i < Math.min(moves.length, 15); i++) {
+                    const move = moves[i];
+                    tempChess.move(move);
+                    const fen = tempChess.fen();
+                    const response = await fetch(
+                        `https://explorer.lichess.org/lichess?variant=standard&speeds=blitz,rapid,classical&ratings=2000,2200,2500&fen=${encodeURIComponent(fen)}`,
+                        { method: 'GET', headers: { 'Accept': 'application/json' } }
+                    );
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.opening) {
+                            lastValidPosition = {
+                                name: data.opening.name || 'Unknown Opening',
+                                eco: data.opening.eco || '',
+                                fen: fen,
+                                length: i + 1,
+                                source: 'lichess'
+                            };
+                        } else if (lastValidPosition) {
+                            break;
+                        }
+                    } else {
+                        break;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                if (lastValidPosition) {
+                    const movesText = moves.slice(0, lastValidPosition.length).map(m => m.san).join(' ');
+                    const result = { ...lastValidPosition, moves: movesText };
+                    showToast(`✅ افتتاحية من Lichess: ${result.name}`, 2000);
+                    return result;
+                }
+            } catch (error) {
+                console.error('❌ Lichess Opening API failed:', error);
+            }
+            return null;
+        }
+
         // Lichess TSV Files Cache
         let lichessTSVCache = {};
         
@@ -1419,8 +1541,13 @@
                                 break;
                             }
                         } else {
+                            // 404 = الموقف غير موجود في قاعدة البيانات = خرجنا من نطاق الافتتاحية
+                            if (response.status === 404) {
+                                break;
+                            }
                             logDetectionAttempt('lichessCloud', 'trying', `Cloud API returned status: ${response.status}`);
-                            break;
+                            // تجاهل الأخطاء الأخرى والاستمرار
+                            continue;
                         }
                         
                         // تأخير بين الطلبات
@@ -1428,6 +1555,7 @@
                         
                     } catch (fetchError) {
                         logDetectionAttempt('lichessCloud', 'trying', `Fetch error at move ${i + 1}: ${fetchError.message}`);
+                        // عند خطأ الشبكة نوقف المحاولة
                         break;
                     }
                 }
@@ -1562,40 +1690,60 @@
             
             console.log('%c🔍 ===== Starting Opening Detection =====', 'color: #fbbf24; font-weight: bold; font-size: 14px');
             
-            // 1. محاولة Lichess Cloud أولاً (الأسرع والأدق)
-            const lichessCloudResult = await detectOpeningFromLichessCloud(moves);
-            if (lichessCloudResult) {
-                console.log('%c✅ ===== Detection Complete =====', 'color: #4ade80; font-weight: bold; font-size: 14px');
-                updateLogBadge();
-                return lichessCloudResult;
+            // ==================== وضع التحليل السحابي المتقدم (اختياري) ====================
+            if (useCloudDetection) {
+                // 1. محاولة Lichess Cloud
+                const lichessCloudResult = await detectOpeningFromLichessCloud(moves);
+                if (lichessCloudResult) {
+                    console.log('%c✅ ===== Detection Complete (Cloud) =====', 'color: #4ade80; font-weight: bold; font-size: 14px');
+                    updateLogBadge();
+                    return lichessCloudResult;
+                }
+                
+                // 2. محاولة Lichess TSV
+                const lichessTSVResult = await detectOpeningFromLichessTSV(moves);
+                if (lichessTSVResult) {
+                    console.log('%c✅ ===== Detection Complete (Cloud) =====', 'color: #4ade80; font-weight: bold; font-size: 14px');
+                    updateLogBadge();
+                    return lichessTSVResult;
+                }
+                
+                // 3. محاولة GitHub hosted openings
+                const githubResult = await detectOpeningFromGitHub(moves);
+                if (githubResult) {
+                    console.log('%c✅ ===== Detection Complete (Cloud) =====', 'color: #4ade80; font-weight: bold; font-size: 14px');
+                    updateLogBadge();
+                    return githubResult;
+                }
             }
             
-            // 2. محاولة Lichess TSV (قاعدة بيانات ضخمة)
-            const lichessTSVResult = await detectOpeningFromLichessTSV(moves);
-            if (lichessTSVResult) {
+            // ==================== التحليل الأساسي (النظام الرئيسي) ====================
+            // 1. محاولة Lichess Explorer API
+            const lichessResult = await detectOpeningFromLichessExplorer(moves);
+            if (lichessResult) {
                 console.log('%c✅ ===== Detection Complete =====', 'color: #4ade80; font-weight: bold; font-size: 14px');
                 updateLogBadge();
-                return lichessTSVResult;
+                return lichessResult;
             }
             
-            // 3. محاولة GitHub hosted openings (احتياط)
-            const githubResult = await detectOpeningFromGitHub(moves);
-            if (githubResult) {
+            // 2. محاولة ECO.json (قاعدة بيانات شاملة)
+            const ecoResult = await detectOpeningFromECO(moves);
+            if (ecoResult) {
                 console.log('%c✅ ===== Detection Complete =====', 'color: #4ade80; font-weight: bold; font-size: 14px');
                 updateLogBadge();
-                return githubResult;
+                return ecoResult;
             }
             
-            // 4. الرجوع لقاعدة البيانات المحلية كاحتياط أخير
+            // 3. الرجوع لقاعدة البيانات المحلية كاحتياط أخير
             const localResult = detectOpeningLocal(moves);
             if (localResult) {
                 console.log('%c✅ ===== Detection Complete =====', 'color: #4ade80; font-weight: bold; font-size: 14px');
-                showToast(`📚 ${localResult.name} (${localResult.eco})`, 3000);
+                showToast(`📚 افتتاحية من القاعدة المحلية: ${localResult.name}`, 2000);
                 updateLogBadge();
                 return localResult;
             }
             
-            // 5. لم يتم العثور على افتتاحية
+            // 4. لم يتم العثور على افتتاحية
             console.log('%c❌ ===== Detection Failed =====', 'color: #ef4444; font-weight: bold; font-size: 14px');
             showToast('❌ لم يتم التعرف على الافتتاحية', 2000);
             updateLogBadge();
@@ -1635,6 +1783,29 @@
         }
         
         // ==================== Toast ====================
+        // ==================== تبديل وضع التحليل السحابي ====================
+        function toggleCloudDetection() {
+            useCloudDetection = !useCloudDetection;
+            const track = document.getElementById('cloud-toggle-track');
+            const thumb = document.getElementById('cloud-toggle-thumb');
+            const label = document.getElementById('cloud-toggle-label');
+            if (useCloudDetection) {
+                track.style.background = 'var(--accent-cyan)';
+                thumb.style.left = '19px';
+                thumb.style.background = 'white';
+                label.textContent = 'مفعّل';
+                label.style.color = 'var(--accent-cyan)';
+                showToast('☁️ التحليل السحابي المتقدم مفعّل', 2000);
+            } else {
+                track.style.background = 'var(--bg-tertiary)';
+                thumb.style.left = '3px';
+                thumb.style.background = 'var(--text-secondary)';
+                label.textContent = 'معطّل';
+                label.style.color = 'var(--text-secondary)';
+                showToast('🔌 التحليل السحابي المتقدم معطّل', 2000);
+            }
+        }
+        
         function showToast(message, duration = 3000) {
             const toast = document.createElement('div');
             toast.className = 'toast';
@@ -2072,29 +2243,32 @@
             if (blackHeaderOpening) blackHeaderOpening.textContent = openingName;
         }
 
-               // ==================== عرض تصنيف brilliantو bolk  ====================
+               // ==================== تصنيف الحركات ====================
         function applyBrilliantAndBookClassifications() {
             moveClassifications = [];
             const openingLength = openingInfo ? openingInfo.length : 0;
             
             for (let i = 0; i < moveHistory.length; i++) {
-                const currentEval = evaluations[i] || 0;
-                const previousEval = i > 0 ? evaluations[i - 1] : 0;
+                // التقييم الحالي = بعد الحركة i
+                // التقييم السابق = بعد الحركة i-1 (أو 0 للحركة الأولى)
+                const currentEval = evaluations[i] !== undefined ? evaluations[i] : 0;
+                const previousEval = i > 0 ? (evaluations[i - 1] !== undefined ? evaluations[i - 1] : 0) : 0;
                 const isWhite = i % 2 === 0;
+                
+                // حركات الافتتاحية
+                if (i < openingLength) {
+                    moveClassifications[i] = { icon: 'icon-book', symbol: '📖', class: 'indicator-book' };
+                    continue;
+                }
                 
                 let moveType = getMoveType(currentEval, previousEval, isWhite);
                 
-                if (i < openingLength) {
-                    moveType = { icon: 'icon-book', symbol: '📖', class: 'indicator-book' };
-                } else {
-                    const diff = isWhite ? (currentEval - previousEval) : (previousEval - currentEval);
-                    
-                    // brilliant if huge swing, great if a strong but smaller swing
-                    if (diff > 2.5) {
-                        moveType = { icon: 'icon-brilliant', symbol: '!!', class: 'indicator-brilliant' };
-                    } else if (diff > 1.5) {
-                        moveType = { icon: 'icon-great', symbol: '!', class: 'indicator-great' };
-                    }
+                // Brilliant: تحسّن كبير جداً (اللاعب وجد حركة رائعة)
+                const diff = isWhite ? (currentEval - previousEval) : (previousEval - currentEval);
+                if (diff > 2.0) {
+                    moveType = { icon: 'icon-brilliant', symbol: '!!', class: 'indicator-brilliant' };
+                } else if (diff > 1.0) {
+                    moveType = { icon: 'icon-great', symbol: '!', class: 'indicator-great' };
                 }
                 
                 moveClassifications[i] = moveType;
@@ -2123,6 +2297,7 @@
                 
                 displayAnalysisResults();
                 await saveAnalysisToStorage();
+                showToast('✅ اكتمل التحليل');
                 
             } catch (error) {
                 showToast('خطأ في التحليل');
@@ -2137,44 +2312,122 @@
         // ==================== Stockfish ====================
         async function tryStockfishAnalysis() {
             return new Promise((resolve) => {
+                
+                // اختبار تحميل المحرك مع تشخيص واضح
+                const testAndLoad = async () => {
+                    // محاولة المحرك المحلي
+                    const localWorking = await testWorker('stockfish.js');
+                    if (localWorking) {
+                        runAnalysis(localWorking, 'Stockfish محلي ⚡', resolve);
+                        return;
+                    }
+                    
+                    // محاولة CDN
+                    document.getElementById('engine-status').textContent = '⏳ جاري تحميل Stockfish CDN...';
+                    const cdnWorking = await testWorker('https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js');
+                    if (cdnWorking) {
+                        runAnalysis(cdnWorking, 'Stockfish CDN', resolve);
+                        return;
+                    }
+                    
+                    // كلاهما فشل
+                    document.getElementById('engine-status').textContent = '❌ Stockfish غير متاح - استخدام Lichess';
+                    resolve(false);
+                };
+                
+                testAndLoad().catch(() => resolve(false));
+            });
+        }
+        
+        // اختبار إذا كان Worker يعمل فعلاً
+        function testWorker(url) {
+            return new Promise((resolve) => {
                 try {
-                    const stockfish = new Worker('https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js');
-                    let currentPos = 0;
-                    const tempChess = new Chess();
+                    const worker = new Worker(url);
+                    const timeout = setTimeout(() => {
+                        worker.terminate();
+                        resolve(null); // لم يستجب
+                    }, 3000);
                     
-                    document.getElementById('engine-status').textContent = 'المحرك: Stockfish 16';
+                    worker.onmessage = (e) => {
+                        if (typeof e.data === 'string' && 
+                            (e.data.includes('uciok') || e.data.includes('readyok') || e.data.includes('Stockfish'))) {
+                            clearTimeout(timeout);
+                            resolve(worker); // يعمل!
+                        }
+                    };
+                    worker.onerror = () => {
+                        clearTimeout(timeout);
+                        worker.terminate();
+                        resolve(null);
+                    };
+                    worker.postMessage('uci');
+                } catch(e) {
+                    resolve(null);
+                }
+            });
+        }
+        
+        function runAnalysis(stockfish, engineLabel, resolve) {
+                    document.getElementById('engine-status').textContent = `✅ ${engineLabel}`;
                     
-                    const analyzePosition = () => {
-                        if (currentPos >= moveHistory.length) {
+                    // نبني قائمة المواضع: [startPos, afterMove0, afterMove1, ...]
+                    const positions = [];
+                    const ch = new Chess();
+                    positions.push(ch.fen()); // موضع البداية
+                    for (let m of moveHistory) {
+                        ch.move(m);
+                        positions.push(ch.fen());
+                    }
+                    // positions[i] = الموضع بعد الحركة i (أو البداية إذا i=0)
+                    // لتقييم الحركة i: نقيس تغيير التقييم بين positions[i] و positions[i+1] - لكن هذا معقد
+                    // الطريقة الأسهل: نقيم positions[i] لكل i من 0 إلى moveHistory.length
+                    // evaluations[i] = تقييم الموضع بعد الحركة i
+                    
+                    const evalPositions = positions; // كل المواضع
+                    let posIndex = 0; // نبدأ من موضع ما بعد الحركة 0
+                    
+                    const analyzeNext = () => {
+                        // نقيم فقط المواضع بعد كل حركة (index 1 إلى moveHistory.length)
+                        const actualIndex = posIndex + 1; // positions[1] = بعد حركة 0
+                        if (actualIndex >= evalPositions.length) {
                             stockfish.terminate();
-                            document.getElementById('engine-status').textContent = 'اكتمل - Stockfish 16';
+                            document.getElementById('engine-status').textContent = `اكتمل - ${engineLabel}`;
                             resolve(true);
                             return;
                         }
                         
-                        const move = moveHistory[currentPos];
-                        tempChess.move(move);
-                        const fen = tempChess.fen();
-                        
+                        const fen = evalPositions[actualIndex];
                         let evaluation = 0;
                         let gotEval = false;
                         
                         const messageHandler = (event) => {
                             const line = event.data;
+                            if (typeof line !== 'string') return;
+                            
                             if (line.includes('score cp')) {
                                 const match = line.match(/score cp (-?\d+)/);
                                 if (match) {
                                     evaluation = parseInt(match[1]) / 100;
                                     gotEval = true;
                                 }
+                            } else if (line.includes('score mate')) {
+                                const match = line.match(/score mate (-?\d+)/);
+                                if (match) {
+                                    const mateIn = parseInt(match[1]);
+                                    evaluation = mateIn > 0 ? 99 : -99;
+                                    gotEval = true;
+                                }
                             } else if (line.startsWith('bestmove')) {
-                                evaluations[currentPos] = evaluation;
-                                currentPos++;
+                                evaluations[posIndex] = gotEval ? evaluation : 0;
+                                posIndex++;
                                 
-                                const progress = (currentPos / moveHistory.length * 100).toFixed(0);
+                                const progress = (posIndex / moveHistory.length * 100).toFixed(0);
                                 document.getElementById('analysis-progress-fill').style.width = progress + '%';
+                                document.getElementById('engine-status').textContent = 
+                                    `${engineLabel} (${progress}%)`;
                                 
-                                setTimeout(analyzePosition, 10);
+                                setTimeout(analyzeNext, 5);
                             }
                         };
                         
@@ -2182,30 +2435,39 @@
                         stockfish.addEventListener('message', messageHandler);
                         
                         stockfish.postMessage('position fen ' + fen);
-                        stockfish.postMessage('go depth 12');
+                        stockfish.postMessage('go depth 15');
                         
+                        // timeout لكل موضع
                         setTimeout(() => {
-                            if (!gotEval) {
-                                evaluations[currentPos] = 0;
-                                currentPos++;
-                                analyzePosition();
+                            if (!gotEval && posIndex === actualIndex - 1) {
+                                evaluations[posIndex] = 0;
+                                posIndex++;
+                                analyzeNext();
                             }
-                        }, 2000);
+                        }, 5000);
                     };
                     
-                    analyzePosition();
-                    
+                    // تهيئة المحرك
+                    // timeout شامل
                     setTimeout(() => {
-                        if (evaluations.length < moveHistory.length) {
+                        if (posIndex < moveHistory.length) {
                             stockfish.terminate();
-                            resolve(false);
+                            document.getElementById('engine-status').textContent = `⚠️ ${engineLabel} - انتهى الوقت`;
+                            resolve(posIndex > 0); // نجاح جزئي
                         }
-                    }, 60000);
+                    }, 120000);
                     
-                } catch (error) {
-                    resolve(false);
-                }
-            });
+                    // المحرك جاهز (testWorker أرسل uci بالفعل، نرسل isready)
+                    stockfish.postMessage('isready');
+                    const readyHandler = (event) => {
+                        if (typeof event.data === 'string' && event.data.includes('readyok')) {
+                            stockfish.removeEventListener('message', readyHandler);
+                            analyzeNext();
+                        }
+                    };
+                    stockfish.addEventListener('message', readyHandler);
+                    // fallback إذا readyok لم يأتِ (بعض الإصدارات لا ترسله)
+                    setTimeout(() => analyzeNext(), 500);
         }
         
         // ==================== Lichess Cloud ====================
@@ -2382,16 +2644,15 @@
         }
         
         function getMoveType(currentEval, previousEval, isWhite) {
+            // diff موجب = تحسّن للاعب، سالب = تراجع
             const diff = isWhite ? (currentEval - previousEval) : (previousEval - currentEval);
-            const adiff = Math.abs(diff);
             
-            if (adiff < 0.1) return { icon: 'icon-best', symbol: '✓', class: 'indicator-best' };
-            if (adiff < 0.3) return { icon: 'icon-excellent', symbol: '✓', class: 'indicator-excellent' };
-            if (adiff < 0.5) return { icon: 'icon-good', symbol: '✓', class: 'indicator-good' };
-            if (adiff < 1.0) return { icon: 'icon-inaccuracy', symbol: '?!', class: 'indicator-inaccuracy' };
-            if (adiff < 1.5) return { icon: 'icon-mistake', symbol: '?', class: 'indicator-mistake' };
-            if (adiff < 2.5) return { icon: 'icon-great', symbol: '!', class: 'indicator-great' }; // new: great move
-            return { icon: 'icon-blunder', symbol: '??', class: 'indicator-blunder' };
+            if (diff >= -0.1) return { icon: 'icon-best',       symbol: '✓',  class: 'indicator-best' };
+            if (diff >= -0.25) return { icon: 'icon-excellent',  symbol: '✓',  class: 'indicator-excellent' };
+            if (diff >= -0.5)  return { icon: 'icon-good',       symbol: '✓',  class: 'indicator-good' };
+            if (diff >= -0.9)  return { icon: 'icon-inaccuracy', symbol: '?!', class: 'indicator-inaccuracy' };
+            if (diff >= -1.8)  return { icon: 'icon-mistake',    symbol: '?',  class: 'indicator-mistake' };
+            return                     { icon: 'icon-blunder',   symbol: '??', class: 'indicator-blunder' };
         }
         
         // ==================== مؤشر الحركة على الرقعة ====================
@@ -3298,6 +3559,16 @@
         
         // ==================== تهيئة ====================
         lucide.createIcons();
+        
+        // ربط زر التحليل السحابي عبر event delegation (يعمل حتى قبل فتح المودال)
+        document.addEventListener('click', function(e) {
+            const toggle = e.target.closest('#cloud-toggle-row');
+            if (toggle) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleCloudDetection();
+            }
+        });
         
         // استرجاع الجلسة عند التحميل
         window.addEventListener('load', async () => {
