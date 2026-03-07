@@ -784,26 +784,26 @@
                             <div id="analysis-progress" class="progress-bar mt-2 hidden">
                                 <div id="analysis-progress-fill" class="progress-bar-fill" style="width: 0%"></div>
                             </div>
-                            <div id="cloud-toggle-row" class="mt-2 flex items-center justify-center gap-2" style="cursor: pointer; user-select: none;">
-                                <span style="font-size: 0.78rem; color: var(--text-secondary);">التحليل السحابي المتقدم</span>
-                                <div id="cloud-toggle-wrap" style="
-                                    position: relative; display: inline-block;
-                                    width: 36px; height: 20px;
-                                    flex-shrink: 0;
-                                ">
-                                    <div id="cloud-toggle-track" style="
-                                        width: 36px; height: 20px; border-radius: 10px;
-                                        background: var(--bg-tertiary); border: 1px solid rgba(255,255,255,0.15);
-                                        transition: background 0.25s;
-                                    "></div>
-                                    <div id="cloud-toggle-thumb" style="
-                                        position: absolute; top: 3px; left: 3px;
-                                        width: 14px; height: 14px; border-radius: 50%;
-                                        background: var(--text-secondary);
-                                        transition: left 0.25s, background 0.25s;
-                                    "></div>
-                                </div>
+
                                 <span id="cloud-toggle-label" style="font-size:0.72rem; color: var(--text-secondary);">معطّل</span>
+                            </div>
+                            <!-- خيار سرعة التحليل -->
+                            <div class="mt-2 flex items-center justify-center gap-2">
+                                <span style="font-size: 0.78rem; color: var(--text-secondary);">دقة التحليل</span>
+                                <div id="depth-selector" style="display:flex; gap:4px;">
+                                    <button onclick="setAnalysisDepth('fast')" id="depth-fast" style="
+                                        font-size:0.7rem; padding:2px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.2);
+                                        background:var(--accent-green); color:#fff; cursor:pointer; transition:all 0.2s;
+                                    ">⚡ سريع</button>
+                                    <button onclick="setAnalysisDepth('normal')" id="depth-normal" style="
+                                        font-size:0.7rem; padding:2px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.2);
+                                        background:var(--bg-tertiary); color:var(--text-secondary); cursor:pointer; transition:all 0.2s;
+                                    ">⚖️ متوازن</button>
+                                    <button onclick="setAnalysisDepth('deep')" id="depth-deep" style="
+                                        font-size:0.7rem; padding:2px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.2);
+                                        background:var(--bg-tertiary); color:var(--text-secondary); cursor:pointer; transition:all 0.2s;
+                                    ">🔬 عميق</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1137,6 +1137,19 @@
         let evaluations = [];
         let evalChart = null;
         let isAnalyzing = false;
+        let analysisDepth = 'fast'; // fast=300ms | normal=800ms | deep=2000ms
+        
+        function setAnalysisDepth(mode) {
+            analysisDepth = mode;
+            ['fast','normal','deep'].forEach(m => {
+                const btn = document.getElementById('depth-' + m);
+                if (btn) {
+                    btn.style.background = m === mode ? 'var(--accent-green)' : 'var(--bg-tertiary)';
+                    btn.style.color = m === mode ? '#fff' : 'var(--text-secondary)';
+                }
+            });
+        }
+        window.setAnalysisDepth = setAnalysisDepth;
         let currentMoveIndicator = null;
         let openingInfo = null;
         let moveClassifications = [];
@@ -2284,15 +2297,9 @@
             
             try {
                 const stockfishSuccess = await tryStockfishAnalysis();
-                
                 if (!stockfishSuccess) {
-                    showToast('فشل Stockfish، جاري المحاولة مع Lichess...');
-                    const lichessSuccess = await tryLichessAnalysis();
-                    
-                    if (!lichessSuccess) {
-                        showToast('استخدام المحرك البسيط...');
-                        await simpleEvaluation();
-                    }
+                    showToast('⚠️ Stockfish غير متاح، استخدام التحليل البسيط...');
+                    await simpleEvaluation();
                 }
                 
                 displayAnalysisResults();
@@ -2311,196 +2318,137 @@
         
         // ==================== Stockfish ====================
         async function tryStockfishAnalysis() {
-            return new Promise((resolve) => {
-                
-                // اختبار تحميل المحرك مع تشخيص واضح
-                const testAndLoad = async () => {
-                    // محاولة المحرك المحلي
-                    const localWorking = await testWorker('stockfish.js');
-                    if (localWorking) {
-                        runAnalysis(localWorking, 'Stockfish محلي ⚡', resolve);
-                        return;
-                    }
-                    
-                    // محاولة CDN
-                    document.getElementById('engine-status').textContent = '⏳ جاري تحميل Stockfish CDN...';
-                    const cdnWorking = await testWorker('https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js');
-                    if (cdnWorking) {
-                        runAnalysis(cdnWorking, 'Stockfish CDN', resolve);
-                        return;
-                    }
-                    
-                    // كلاهما فشل
-                    document.getElementById('engine-status').textContent = '❌ Stockfish غير متاح - استخدام Lichess';
-                    resolve(false);
-                };
-                
-                testAndLoad().catch(() => resolve(false));
-            });
+            const engines = [
+                // Stockfish 18 عبر wrapper (يحمل stockfish-18-lite.js + stockfish.wasm)
+                { url: 'stockfish-worker.js', label: 'Stockfish 18 ⚡' },
+                // Stockfish 10 asm.js - احتياطي لا يحتاج wasm
+                { url: 'stockfish.js', label: 'Stockfish 10' },
+                // CDN احتياطي أخير
+                { url: 'https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js', label: 'Stockfish CDN' },
+            ];
+
+            for (const eng of engines) {
+                document.getElementById('engine-status').textContent = `⏳ ${eng.label}...`;
+                const worker = await testWorker(eng.url);
+                if (worker) {
+                    console.log('✅ Engine:', eng.label);
+                    return await runAnalysisWorker(worker, eng.label);
+                }
+                console.log('❌ Failed:', eng.url);
+            }
+
+            document.getElementById('engine-status').textContent = '❌ Stockfish غير متاح';
+            return false;
         }
-        
-        // اختبار إذا كان Worker يعمل فعلاً
+
+        // اختبار Worker القديم
         function testWorker(url) {
             return new Promise((resolve) => {
                 try {
                     const worker = new Worker(url);
-                    const timeout = setTimeout(() => {
-                        worker.terminate();
-                        resolve(null); // لم يستجب
-                    }, 3000);
-                    
+                    // timeout أطول للملفات الكبيرة من CDN
+                    const isLocal = !url.startsWith('http');
+                    const timeout = setTimeout(() => { worker.terminate(); resolve(null); }, isLocal ? 3000 : 8000);
                     worker.onmessage = (e) => {
-                        if (typeof e.data === 'string' && 
+                        if (typeof e.data === 'string' &&
                             (e.data.includes('uciok') || e.data.includes('readyok') || e.data.includes('Stockfish'))) {
-                            clearTimeout(timeout);
-                            resolve(worker); // يعمل!
+                            clearTimeout(timeout); resolve(worker);
                         }
                     };
-                    worker.onerror = () => {
-                        clearTimeout(timeout);
-                        worker.terminate();
-                        resolve(null);
-                    };
+                    worker.onerror = () => { clearTimeout(timeout); worker.terminate(); resolve(null); };
                     worker.postMessage('uci');
-                } catch(e) {
-                    resolve(null);
-                }
+                } catch(e) { resolve(null); }
             });
         }
-        
-        function runAnalysis(stockfish, engineLabel, resolve) {
-            document.getElementById('engine-status').textContent = `⚙️ ${engineLabel} يحلل...`;
 
-            // بناء قائمة FEN لكل موضع بعد كل حركة
-            // evaluations[i] = تقييم الموضع بعد الحركة i (دائماً من منظور البياض)
-            const fenList = [];
-            const ch = new Chess();
-            for (let m of moveHistory) {
-                ch.move(m);
-                fenList.push(ch.fen()); // fenList[i] = الموضع بعد الحركة i
-            }
+        // تحليل باستخدام Worker القديم
+        function runAnalysisWorker(stockfish, engineLabel) {
+            return new Promise((resolve) => {
+                document.getElementById('engine-status').textContent = `⚙️ ${engineLabel}`;
+                const fenList = buildFenList();
+                let idx = 0;
+                let analyzing = false;
+                const moveTime = analysisDepth === 'deep' ? 2000 : analysisDepth === 'normal' ? 800 : 300;
 
-            let idx = 0;          // الحركة التي نحللها الآن
-            let analyzing = false; // منع التداخل
-
-            // handler واحد ثابت طول عمر التحليل
-            const onMsg = (event) => {
-                const line = event.data;
-                if (typeof line !== 'string') return;
-
-                if (line.includes('score cp')) {
-                    const match = line.match(/score cp (-?\d+)/);
-                    if (match) {
-                        // fenList[idx] هو الموضع بعد الحركة idx
-                        // دور من؟ نقرأ من FEN (الحرف بعد المسافة الأولى)
-                        const sideToMove = fenList[idx].split(' ')[1];
-                        const cp = parseInt(match[1]) / 100;
-                        // Stockfish يعطي التقييم من منظور اللاعب صاحب الدور
-                        // نحوّل دائماً لمنظور البياض
-                        evaluations[idx] = (sideToMove === 'w') ? cp : -cp;
-                    }
-                } else if (line.includes('score mate')) {
-                    const match = line.match(/score mate (-?\d+)/);
-                    if (match) {
-                        const sideToMove = fenList[idx].split(' ')[1];
-                        const mate = parseInt(match[1]);
-                        const whiteWins = (sideToMove === 'w') ? mate > 0 : mate < 0;
-                        evaluations[idx] = whiteWins ? 99 : -99;
-                    }
-                } else if (line.startsWith('bestmove')) {
-                    // انتهى تحليل الحركة idx
-                    if (evaluations[idx] === undefined) evaluations[idx] = 0;
-                    idx++;
-                    analyzing = false;
-
-                    const pct = Math.round(idx / fenList.length * 100);
-                    document.getElementById('analysis-progress-fill').style.width = pct + '%';
-                    document.getElementById('engine-status').textContent = `${engineLabel} (${pct}%)`;
-
-                    analyzeOne();
-                }
-            };
-
-            stockfish.addEventListener('message', onMsg);
-
-            function analyzeOne() {
-                if (analyzing) return;
-                if (idx >= fenList.length) {
-                    // اكتمل التحليل
-                    stockfish.removeEventListener('message', onMsg);
-                    stockfish.terminate();
-                    document.getElementById('engine-status').textContent = `اكتمل - ${engineLabel}`;
-                    resolve(true);
-                    return;
-                }
-                analyzing = true;
-                stockfish.postMessage('position fen ' + fenList[idx]);
-                stockfish.postMessage('go depth 15');
-
-                // timeout لكل موضع (5 ثوانٍ)
-                setTimeout(() => {
-                    if (analyzing && evaluations[idx] === undefined) {
-                        evaluations[idx] = 0;
-                        idx++;
-                        analyzing = false;
+                const onMsg = (event) => {
+                    const line = event.data;
+                    if (typeof line !== 'string') return;
+                    parseEvalLine(line, fenList, idx, (val) => { evaluations[idx] = val; });
+                    if (line.startsWith('bestmove')) {
+                        if (evaluations[idx] === undefined) evaluations[idx] = 0;
+                        idx++; analyzing = false;
+                        updateProgress(idx, fenList.length, engineLabel);
                         analyzeOne();
                     }
-                }, 5000);
-            }
+                };
+                stockfish.addEventListener('message', onMsg);
 
-            // timeout شامل (3 دقائق)
-            setTimeout(() => {
-                if (idx < fenList.length) {
-                    stockfish.removeEventListener('message', onMsg);
-                    stockfish.terminate();
-                    document.getElementById('engine-status').textContent = `⚠️ ${engineLabel} - انتهى الوقت`;
-                    resolve(idx > 0);
-                }
-            }, 180000);
-
-            // ابدأ التحليل مباشرة (testWorker أرسل uci وانتظر readyok مسبقاً)
-            stockfish.postMessage('ucinewgame');
-            analyzeOne();
-        }
-        
-        // ==================== Lichess Cloud ====================
-        async function tryLichessAnalysis() {
-            try {
-                document.getElementById('engine-status').textContent = 'المحرك: Lichess Cloud';
-                const tempChess = new Chess();
-                
-                for (let i = 0; i < moveHistory.length; i++) {
-                    const move = moveHistory[i];
-                    tempChess.move(move);
-                    const fen = tempChess.fen();
-                    
-                    const response = await fetch(`https://lichess.org/api/cloud-eval?fen=${encodeURIComponent(fen)}`);
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.pvs && data.pvs[0]) {
-                            const cp = data.pvs[0].cp;
-                            evaluations[i] = cp ? cp / 100 : 0;
-                        } else {
-                            evaluations[i] = 0;
-                        }
-                    } else {
-                        return false;
+                function analyzeOne() {
+                    if (analyzing) return;
+                    if (idx >= fenList.length) {
+                        stockfish.removeEventListener('message', onMsg);
+                        stockfish.terminate();
+                        document.getElementById('engine-status').textContent = `اكتمل - ${engineLabel}`;
+                        resolve(true); return;
                     }
-                    
-                    const progress = ((i + 1) / moveHistory.length * 100).toFixed(0);
-                    document.getElementById('analysis-progress-fill').style.width = progress + '%';
-                    
-                    await new Promise(r => setTimeout(r, 100));
+                    analyzing = true;
+                    stockfish.postMessage('position fen ' + fenList[idx]);
+                    stockfish.postMessage('go movetime ' + moveTime);
+                    setTimeout(() => {
+                        if (analyzing && evaluations[idx] === undefined) {
+                            stockfish.postMessage('stop');
+                            evaluations[idx] = 0; idx++; analyzing = false; analyzeOne();
+                        }
+                    }, moveTime + 2000);
                 }
-                
-                document.getElementById('engine-status').textContent = 'اكتمل - Lichess Cloud';
-                return true;
-                
-            } catch (error) {
-                return false;
+                setTimeout(() => {
+                    if (idx < fenList.length) {
+                        stockfish.removeEventListener('message', onMsg);
+                        stockfish.terminate();
+                        document.getElementById('engine-status').textContent = `⚠️ ${engineLabel} - انتهى الوقت`;
+                        resolve(idx > 0);
+                    }
+                }, 180000);
+                stockfish.postMessage('ucinewgame');
+                analyzeOne();
+            });
+        }
+
+        // دوال مشتركة
+        function buildFenList() {
+            const fenList = [];
+            const ch = new Chess();
+            for (let m of moveHistory) { ch.move(m); fenList.push(ch.fen()); }
+            return fenList;
+        }
+
+        function parseEvalLine(line, fenList, idx, setter) {
+            if (line.includes('score cp')) {
+                const match = line.match(/score cp (-?\d+)/);
+                if (match) {
+                    const sideToMove = fenList[idx]?.split(' ')[1];
+                    const cp = parseInt(match[1]) / 100;
+                    setter((sideToMove === 'w') ? cp : -cp);
+                }
+            } else if (line.includes('score mate')) {
+                const match = line.match(/score mate (-?\d+)/);
+                if (match) {
+                    const sideToMove = fenList[idx]?.split(' ')[1];
+                    const mate = parseInt(match[1]);
+                    const whiteWins = (sideToMove === 'w') ? mate > 0 : mate < 0;
+                    setter(whiteWins ? 99 : -99);
+                }
             }
         }
+
+        function updateProgress(idx, total, label) {
+            const pct = Math.round(idx / total * 100);
+            document.getElementById('analysis-progress-fill').style.width = pct + '%';
+            document.getElementById('engine-status').textContent = `${label} (${pct}%)`;
+        }
+
+                // ==================== Lichess Cloud ====================
+        // Lichess Cloud Analysis - محذوف
         
         // ==================== Simple Eval ====================
         async function simpleEvaluation() {
@@ -3564,16 +3512,6 @@
         
         // ==================== تهيئة ====================
         lucide.createIcons();
-        
-        // ربط زر التحليل السحابي عبر event delegation (يعمل حتى قبل فتح المودال)
-        document.addEventListener('click', function(e) {
-            const toggle = e.target.closest('#cloud-toggle-row');
-            if (toggle) {
-                e.preventDefault();
-                e.stopPropagation();
-                toggleCloudDetection();
-            }
-        });
         
         // استرجاع الجلسة عند التحميل
         window.addEventListener('load', async () => {
